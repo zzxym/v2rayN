@@ -501,6 +501,9 @@
   <data name="menuSpeedServer" xml:space="preserve">
     <value>测试速度 (多选)</value>
   </data>
+  <data name="menuGooglePingServer" xml:space="preserve">
+    <value>google测试 (多选)</value>
+  </data>
   <data name="menuTcpingServer" xml:space="preserve">
     <value>测试延迟 Tcping (多选)</value>
   </data>

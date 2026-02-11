@@ -1,0 +1,125 @@
+<UserControl
+    x:Class="v2rayN.Desktop.Views.SubscriptionMaintenanceView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:resx="clr-namespace:ServiceLib.Resx;assembly=ServiceLib"
+    xmlns:vms="clr-namespace:ServiceLib.ViewModels;assembly=ServiceLib"
+    d:DesignHeight="450"
+    d:DesignWidth="600"
+    x:DataType="vms:SubscriptionMaintenanceViewModel"
+    mc:Ignorable="d">
+    <StackPanel Margin="{StaticResource Margin8}">
+        <Border Margin="{StaticResource Margin4}" Theme="{DynamicResource CardBorder}">
+            <StackPanel Margin="{StaticResource Margin8}">
+                <TextBlock Margin="{StaticResource Margin4}" FontWeight="Bold" Text="远程服务器的订阅信息维护" />
+                
+                <StackPanel Margin="{StaticResource Margin4}" Orientation="Horizontal">
+                    <TextBlock Width="120" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="订阅分组:" />
+                    <ComboBox
+                        x:Name="cmbSubscriptions"
+                        Width="300"
+                        Margin="{StaticResource Margin4}"
+                        ItemsSource="{Binding Subscriptions}"
+                        SelectedItem="{Binding SelectedSubscription}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Remarks}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </StackPanel>
+                
+                <StackPanel Margin="{StaticResource Margin4}" Orientation="Horizontal">
+                    <TextBlock Width="120" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="服务器:" />
+                    <ComboBox
+                        x:Name="cmbServers"
+                        Width="300"
+                        Margin="{StaticResource Margin4}"
+                        ItemsSource="{Binding Servers}"
+                        SelectedItem="{Binding SelectedServer}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Name}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </StackPanel>
+                
+                <StackPanel Margin="{StaticResource Margin4}" Orientation="Horizontal">
+                    <TextBlock Width="120" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="服务器地址:" />
+                    <TextBox
+                        Width="300"
+                        Margin="{StaticResource Margin4}"
+                        Text="{Binding SelectedServer.Address}" />
+                </StackPanel>
+                
+                <StackPanel Margin="{StaticResource Margin4}" Orientation="Horizontal">
+                    <TextBlock Width="120" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="传输协议:" />
+                    <ComboBox
+                        x:Name="cmbProtocol"
+                        Width="300"
+                        Margin="{StaticResource Margin4}"
+                        ItemsSource="{Binding Protocols}"
+                        SelectedItem="{Binding SelectedProtocol}" />
+                </StackPanel>
+                
+                <StackPanel Margin="{StaticResource Margin4}" Orientation="Horizontal">
+                    <TextBlock Width="120" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="用户名:" />
+                    <TextBox
+                        x:Name="txtUsername"
+                        Width="300"
+                        Margin="{StaticResource Margin4}"
+                        Text="{Binding Username}" />
+                </StackPanel>
+                
+                <StackPanel Margin="{StaticResource Margin4}" Orientation="Horizontal">
+                    <TextBlock Width="120" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="密码:" />
+                    <TextBox
+                        x:Name="txtPassword"
+                        Width="300"
+                        Margin="{StaticResource Margin4}"
+                        Text="{Binding Password}"
+                        PasswordChar="*" />
+                </StackPanel>
+                
+                <StackPanel Margin="{StaticResource Margin4}" Orientation="Horizontal">
+                    <TextBlock Width="120" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="目标路径:" />
+                    <TextBox
+                        x:Name="txtTargetPath"
+                        Width="300"
+                        Margin="{StaticResource Margin4}"
+                        Text="{Binding TargetPath}" />
+                </StackPanel>
+                
+                <StackPanel Margin="{StaticResource Margin8}" HorizontalAlignment="Center" Orientation="Horizontal">
+                    <Button
+                        x:Name="btnUpload"
+                        Width="100"
+                        Margin="{StaticResource Margin4}"
+                        Content="上传"
+                        Command="{Binding UploadCmd}" />
+                    <Button
+                        x:Name="btnSaveServer"
+                        Width="100"
+                        Margin="{StaticResource Margin4}"
+                        Content="保存服务器"
+                        Command="{Binding SaveServerCmd}" />
+                    <Button
+                        x:Name="btnRefresh"
+                        Width="100"
+                        Margin="{StaticResource Margin4}"
+                        Content="刷新"
+                        Command="{Binding RefreshCmd}" />
+                </StackPanel>
+                
+                <TextBlock
+                    x:Name="txtStatus"
+                    Margin="{StaticResource Margin4}"
+                    Text="{Binding Status}"
+                    TextWrapping="Wrap" />
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</UserControl>

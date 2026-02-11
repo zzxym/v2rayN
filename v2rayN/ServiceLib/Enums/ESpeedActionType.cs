@@ -6,5 +6,7 @@ public enum ESpeedActionType
     Realping,
     Speedtest,
     Mixedtest,
-    FastRealping
+    FastRealping,
+    Googleping,
+    Huaweiping
 }

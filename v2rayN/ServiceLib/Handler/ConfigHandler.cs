@@ -2063,7 +2063,6 @@ public static class ConfigHandler
     /// <returns>0 if successful</returns>
     public static async Task<int> InitBuiltinRouting(Config config, bool blImportAdvancedRules = false)
     {
-        var ver = "V4-";
         var items = await AppManager.Instance.RoutingItems();
 
         //TODO Temporary code to be removed later
@@ -2074,7 +2073,11 @@ public static class ConfigHandler
             items = await AppManager.Instance.RoutingItems();
         }
 
-        if (!blImportAdvancedRules && items.Count(u => u.Remarks.StartsWith(ver)) > 0)
+        // Check if any of the new rule set names exist
+        if (!blImportAdvancedRules && items.Any(u => 
+            u.Remarks == "默认代理(Whitelist)" || 
+            u.Remarks == "默认直连(Blacklist)" || 
+            u.Remarks == "全局代理(Global)"))
         {
             //migrate
             //TODO Temporary code to be removed later
@@ -2092,28 +2095,28 @@ public static class ConfigHandler
         }
 
         var maxSort = items.Count;
-        //Bypass the mainland
+        //默认代理(Whitelist)
         var item2 = new RoutingItem()
         {
-            Remarks = $"{ver}绕过大陆(Whitelist)",
+            Remarks = "默认代理(Whitelist)",
             Url = string.Empty,
             Sort = maxSort + 1,
         };
         await AddBatchRoutingRules(item2, EmbedUtils.GetEmbedText(Global.CustomRoutingFileName + "white"));
 
-        //Blacklist
+        //默认直连(Blacklist)
         var item3 = new RoutingItem()
         {
-            Remarks = $"{ver}黑名单(Blacklist)",
+            Remarks = "默认直连(Blacklist)",
             Url = string.Empty,
             Sort = maxSort + 2,
         };
         await AddBatchRoutingRules(item3, EmbedUtils.GetEmbedText(Global.CustomRoutingFileName + "black"));
 
-        //Global
+        //全局代理(Global)
         var item1 = new RoutingItem()
         {
-            Remarks = $"{ver}全局(Global)",
+            Remarks = "全局代理(Global)",
             Url = string.Empty,
             Sort = maxSort + 3,
         };

@@ -35,6 +35,7 @@
                             <MenuItem x:Name="menuSubEdit" Header="{x:Static resx:ResUI.menuSubEdit}" />
                             <MenuItem x:Name="menuSubAdd" Header="{x:Static resx:ResUI.menuSubAdd}" />
                             <MenuItem x:Name="menuSubDelete" Header="{x:Static resx:ResUI.menuSubDelete}" />
+                            <MenuItem x:Name="menuSubExport" Header="导出订阅分组" />
                         </ContextMenu>
                     </ListBox.ContextMenu>
                 </ListBox>
@@ -79,7 +80,7 @@
                     x:Name="btnFastRealPing"
                     Margin="{StaticResource MarginLr4}"
                     Classes="IconButton Success"
-                    ToolTip.Tip="{x:Static resx:ResUI.menuFastRealPing}">
+                    ToolTip.Tip="一键google测试延迟">
                     <Button.Content>
                         <PathIcon Data="{StaticResource SemiIconBolt}" />
                     </Button.Content>
@@ -133,14 +134,18 @@
                             Header="{x:Static resx:ResUI.menuTcpingServer}"
                             InputGesture="Ctrl+O" />
                         <MenuItem
-                            x:Name="menuRealPingServer"
-                            Header="{x:Static resx:ResUI.menuRealPingServer}"
-                            InputGesture="Ctrl+R" />
-                        <MenuItem
                             x:Name="menuSpeedServer"
                             Header="{x:Static resx:ResUI.menuSpeedServer}"
                             InputGesture="Ctrl+T" />
-                        <MenuItem x:Name="menuSortServerResult" Header="{x:Static resx:ResUI.menuSortServerResult}" />
+                        <MenuItem
+                            x:Name="menuGooglePingServer"
+                            Header="google测试 (多选)" />
+                        <MenuItem
+                            x:Name="menuHuaweiPingServer"
+                            Header="huawei测试 (多选)" />
+                        <MenuItem
+                            x:Name="menuSortServerResult"
+                            Header="{x:Static resx:ResUI.menuSortServerResult}" />
                         <Separator />
                         <MenuItem
                             x:Name="menuMoveToGroup"
@@ -274,6 +279,7 @@
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
+
                     <DataGridTextColumn
                         Width="100"
                         Binding="{Binding SpeedVal}"

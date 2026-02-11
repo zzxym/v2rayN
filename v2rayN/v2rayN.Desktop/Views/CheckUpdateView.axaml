@@ -23,16 +23,6 @@
                 HorizontalAlignment="Center"
                 Orientation="Horizontal">
 
-                <TextBlock
-                    Margin="{StaticResource Margin4}"
-                    HorizontalAlignment="Left"
-                    VerticalAlignment="Center"
-                    Text="{x:Static resx:ResUI.TbSettingsEnableCheckPreReleaseUpdate}" />
-                <ToggleSwitch
-                    x:Name="togEnableCheckPreReleaseUpdate"
-                    Margin="{StaticResource Margin4}"
-                    HorizontalAlignment="Left" />
-
                 <Button
                     x:Name="btnCheckUpdate"
                     Width="100"

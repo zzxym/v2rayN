@@ -154,15 +154,18 @@
                             Header="{x:Static resx:ResUI.menuTcpingServer}"
                             InputGestureText="Ctrl+O" />
                         <MenuItem
-                            x:Name="menuRealPingServer"
-                            Height="{StaticResource MenuItemHeight}"
-                            Header="{x:Static resx:ResUI.menuRealPingServer}"
-                            InputGestureText="Ctrl+R" />
-                        <MenuItem
                             x:Name="menuSpeedServer"
                             Height="{StaticResource MenuItemHeight}"
                             Header="{x:Static resx:ResUI.menuSpeedServer}"
                             InputGestureText="Ctrl+T" />
+                        <MenuItem
+                            x:Name="menuGooglePingServer"
+                            Height="{StaticResource MenuItemHeight}"
+                            Header="google测试 (多选)" />
+                        <MenuItem
+                            x:Name="menuHuaweiPingServer"
+                            Height="{StaticResource MenuItemHeight}"
+                            Header="huawei测试 (多选)" />
                         <MenuItem
                             x:Name="menuSortServerResult"
                             Height="{StaticResource MenuItemHeight}"
@@ -220,52 +223,25 @@
                             Header="{x:Static resx:ResUI.menuShareServer}"
                             InputGestureText="Ctrl+F" />
                         <MenuItem Header="{x:Static resx:ResUI.menuExportConfig}">
-                            <MenuItem
-                                x:Name="menuExport2ClientConfig"
-                                Height="{StaticResource MenuItemHeight}"
-                                Header="{x:Static resx:ResUI.menuExport2ClientConfig}" />
-                            <MenuItem
-                                x:Name="menuExport2ClientConfigClipboard"
-                                Height="{StaticResource MenuItemHeight}"
-                                Header="{x:Static resx:ResUI.menuExport2ClientConfigClipboard}" />
+                            <MenuItem x:Name="menuExport2ClientConfig" Height="{StaticResource MenuItemHeight}" Header="{x:Static resx:ResUI.menuExport2ClientConfig}" />
+                            <MenuItem x:Name="menuExport2ClientConfigClipboard" Height="{StaticResource MenuItemHeight}" Header="{x:Static resx:ResUI.menuExport2ClientConfigClipboard}" />
                             <Separator />
                             <MenuItem
                                 x:Name="menuExport2ShareUrl"
                                 Height="{StaticResource MenuItemHeight}"
                                 Header="{x:Static resx:ResUI.menuExport2ShareUrl}"
                                 InputGestureText="Ctrl+C" />
-                            <MenuItem
-                                x:Name="menuExport2ShareUrlBase64"
-                                Height="{StaticResource MenuItemHeight}"
-                                Header="{x:Static resx:ResUI.menuExport2ShareUrlBase64}" />
+                            <MenuItem x:Name="menuExport2ShareUrlBase64" Height="{StaticResource MenuItemHeight}" Header="{x:Static resx:ResUI.menuExport2ShareUrlBase64}" />
                         </MenuItem>
                         <Separator />
                         <MenuItem Header="{x:Static resx:ResUI.menuGenGroupMultipleServer}">
-                            <MenuItem
-                                x:Name="menuGenGroupMultipleServerXrayRandom"
-                                Height="{StaticResource MenuItemHeight}"
-                                Header="{x:Static resx:ResUI.menuGenGroupMultipleServerXrayRandom}" />
-                            <MenuItem
-                                x:Name="menuGenGroupMultipleServerXrayRoundRobin"
-                                Height="{StaticResource MenuItemHeight}"
-                                Header="{x:Static resx:ResUI.menuGenGroupMultipleServerXrayRoundRobin}" />
-                            <MenuItem
-                                x:Name="menuGenGroupMultipleServerXrayLeastPing"
-                                Height="{StaticResource MenuItemHeight}"
-                                Header="{x:Static resx:ResUI.menuGenGroupMultipleServerXrayLeastPing}" />
-                            <MenuItem
-                                x:Name="menuGenGroupMultipleServerXrayLeastLoad"
-                                Height="{StaticResource MenuItemHeight}"
-                                Header="{x:Static resx:ResUI.menuGenGroupMultipleServerXrayLeastLoad}" />
+                            <MenuItem x:Name="menuGenGroupMultipleServerXrayRandom" Height="{StaticResource MenuItemHeight}" Header="{x:Static resx:ResUI.menuGenGroupMultipleServerXrayRandom}" />
+                            <MenuItem x:Name="menuGenGroupMultipleServerXrayRoundRobin" Height="{StaticResource MenuItemHeight}" Header="{x:Static resx:ResUI.menuGenGroupMultipleServerXrayRoundRobin}" />
+                            <MenuItem x:Name="menuGenGroupMultipleServerXrayLeastPing" Height="{StaticResource MenuItemHeight}" Header="{x:Static resx:ResUI.menuGenGroupMultipleServerXrayLeastPing}" />
+                            <MenuItem x:Name="menuGenGroupMultipleServerXrayLeastLoad" Height="{StaticResource MenuItemHeight}" Header="{x:Static resx:ResUI.menuGenGroupMultipleServerXrayLeastLoad}" />
                             <Separator />
-                            <MenuItem
-                                x:Name="menuGenGroupMultipleServerSingBoxLeastPing"
-                                Height="{StaticResource MenuItemHeight}"
-                                Header="{x:Static resx:ResUI.menuGenGroupMultipleServerSingBoxLeastPing}" />
-                            <MenuItem
-                                x:Name="menuGenGroupMultipleServerSingBoxFallback"
-                                Height="{StaticResource MenuItemHeight}"
-                                Header="{x:Static resx:ResUI.menuGenGroupMultipleServerSingBoxFallback}" />
+                            <MenuItem x:Name="menuGenGroupMultipleServerSingBoxLeastPing" Height="{StaticResource MenuItemHeight}" Header="{x:Static resx:ResUI.menuGenGroupMultipleServerSingBoxLeastPing}" />
+                            <MenuItem x:Name="menuGenGroupMultipleServerSingBoxFallback" Height="{StaticResource MenuItemHeight}" Header="{x:Static resx:ResUI.menuGenGroupMultipleServerSingBoxFallback}" />
                         </MenuItem>
                     </ContextMenu>
                 </DataGrid.ContextMenu>
@@ -336,6 +312,7 @@
                             </Style>
                         </DataGridTextColumn.ElementStyle>
                     </base:MyDGTextColumn>
+
                     <base:MyDGTextColumn
                         Width="100"
                         Binding="{Binding SpeedVal}"

@@ -65,6 +65,8 @@ public class ProfilesViewModel : MyReactiveObject
     public ReactiveCommand<Unit, Unit> TcpingServerCmd { get; }
     public ReactiveCommand<Unit, Unit> RealPingServerCmd { get; }
     public ReactiveCommand<Unit, Unit> SpeedServerCmd { get; }
+    public ReactiveCommand<Unit, Unit> GooglePingServerCmd { get; }
+    public ReactiveCommand<Unit, Unit> HuaweiPingServerCmd { get; }
     public ReactiveCommand<Unit, Unit> SortServerResultCmd { get; }
     public ReactiveCommand<Unit, Unit> RemoveInvalidServerResultCmd { get; }
     public ReactiveCommand<Unit, Unit> FastRealPingCmd { get; }
@@ -79,6 +81,7 @@ public class ProfilesViewModel : MyReactiveObject
     public ReactiveCommand<Unit, Unit> AddSubCmd { get; }
     public ReactiveCommand<Unit, Unit> EditSubCmd { get; }
     public ReactiveCommand<Unit, Unit> DeleteSubCmd { get; }
+    public ReactiveCommand<Unit, Unit> ExportSubCmd { get; }
 
     #endregion Menu
 
@@ -206,6 +209,14 @@ public class ProfilesViewModel : MyReactiveObject
         {
             await ServerSpeedtest(ESpeedActionType.Speedtest);
         }, canEditRemove);
+        GooglePingServerCmd = ReactiveCommand.CreateFromTask(async () =>
+        {
+            await ServerSpeedtest(ESpeedActionType.Googleping);
+        }, canEditRemove);
+        HuaweiPingServerCmd = ReactiveCommand.CreateFromTask(async () =>
+        {
+            await ServerSpeedtest(ESpeedActionType.Huaweiping);
+        }, canEditRemove);
         SortServerResultCmd = ReactiveCommand.CreateFromTask(async () =>
         {
             await SortServer(EServerColName.DelayVal.ToString());
@@ -244,6 +255,10 @@ public class ProfilesViewModel : MyReactiveObject
         DeleteSubCmd = ReactiveCommand.CreateFromTask(async () =>
         {
             await DeleteSubAsync();
+        });
+        ExportSubCmd = ReactiveCommand.CreateFromTask(async () =>
+        {
+            await ExportSubAsync();
         });
 
         #endregion WhenAnyValue && ReactiveCommand
@@ -753,7 +768,7 @@ public class ProfilesViewModel : MyReactiveObject
         else if (actionType == ESpeedActionType.FastRealping)
         {
             SelectedProfiles = ProfileItems;
-            actionType = ESpeedActionType.Realping;
+            actionType = ESpeedActionType.Googleping;
         }
 
         var lstSelected = await GetProfileItems(false);
@@ -910,6 +925,63 @@ public class ProfilesViewModel : MyReactiveObject
 
         await RefreshSubscriptions();
         await SubSelectedChangedAsync(true);
+    }
+
+    private async Task ExportSubAsync()
+    {
+        var item = await AppManager.Instance.GetSubItem(_config.SubIndexId);
+        if (item is null)
+        {
+            return;
+        }
+
+        try
+        {
+            // Get all servers for this subscription
+            var profileItems = await AppManager.Instance.ProfileItems(_config.SubIndexId);
+            var servers = profileItems.ToList();
+            if (servers.Count == 0)
+            {
+                NoticeManager.Instance.Enqueue("订阅分组下无节点");
+                return;
+            }
+
+            // Generate subscription content
+            StringBuilder sb = new();
+            foreach (var server in servers)
+            {
+                var url = FmtHandler.GetShareUri(server);
+                if (url.IsNullOrEmpty())
+                {
+                    continue;
+                }
+                sb.Append(url);
+                sb.AppendLine();
+            }
+            if (sb.Length == 0)
+            {
+                NoticeManager.Instance.Enqueue("生成分享链接失败");
+                return;
+            }
+
+            // Base64 encode
+            var content = Utils.Base64Encode(sb.ToString());
+
+            // Create export directory
+            var exportDir = Path.Combine(Utils.StartupPath(), "guiNodes");
+            Directory.CreateDirectory(exportDir);
+
+            // Save to file
+            var fileName = Path.Combine(exportDir, item.Remarks);
+            await File.WriteAllTextAsync(fileName, content);
+
+            NoticeManager.Instance.SendMessageAndEnqueue($"导出节点信息成功: {fileName}");
+        }
+        catch (Exception ex)
+        {
+            Logging.SaveLog("ExportSubAsync", ex);
+            NoticeManager.Instance.Enqueue($"导出节点信息失败: {ex.Message}");
+        }
     }
 
     #endregion Subscription

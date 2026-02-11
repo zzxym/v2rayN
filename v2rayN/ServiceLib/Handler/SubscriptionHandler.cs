@@ -1,5 +1,9 @@
 namespace ServiceLib.Handler;
 
+using ServiceLib.Handler.Fmt;
+using ServiceLib.Manager;
+using System.IO;
+
 public static class SubscriptionHandler
 {
     public static async Task UpdateProcess(Config config, string subId, bool blProxy, Func<bool, string, Task> updateFunc)
@@ -216,6 +220,78 @@ public static class SubscriptionHandler
                 ? $"{hashCode}{ResUI.MsgUpdateSubscriptionEnd}"
                 : $"{hashCode}{ResUI.MsgFailedImportSubscription}");
 
+        // Export subscription nodes if successful
+        if (ret > 0)
+        {
+            await ExportSubscriptionNodes(config, id, updateFunc);
+        }
+
         return ret > 0;
+    }
+
+    private static async Task ExportSubscriptionNodes(Config config, string subId, Func<bool, string, Task> updateFunc)
+    {
+        try
+        {
+            // Get subscription item by id
+            var subItems = await AppManager.Instance.SubItems();
+            var subItem = subItems.FirstOrDefault(item => item.Id == subId);
+            if (subItem == null)
+            {
+                return;
+            }
+
+            // Get all servers for this subscription
+            var profileItems = await AppManager.Instance.ProfileItems(subId);
+            var servers = profileItems.ToList();
+            if (servers.Count == 0)
+            {
+                return;
+            }
+
+            // Generate subscription content
+            var subscriptionContent = await GenerateSubscriptionContent(servers);
+            if (subscriptionContent.IsNullOrEmpty())
+            {
+                return;
+            }
+
+            // Create export directory
+            var exportDir = Path.Combine(Utils.StartupPath(), "guiNodes");
+            Directory.CreateDirectory(exportDir);
+
+            // Generate filename (subscription alias without extension)
+            var fileName = Path.Combine(exportDir, subItem.Remarks);
+
+            // Save to file
+            await File.WriteAllTextAsync(fileName, subscriptionContent);
+
+            await updateFunc?.Invoke(false, $"导出节点信息成功: {fileName}");
+        }
+        catch (Exception ex)
+        {
+            Logging.SaveLog("ExportSubscriptionNodes", ex);
+            await updateFunc?.Invoke(false, $"导出节点信息失败: {ex.Message}");
+        }
+    }
+
+    private static async Task<string> GenerateSubscriptionContent(List<ProfileItem> servers)
+    {
+        // Generate share links for all servers
+        var shareLinks = new List<string>();
+        foreach (var server in servers)
+        {
+            var shareLink = FmtHandler.GetShareUri(server);
+            if (shareLink.IsNotEmpty())
+            {
+                shareLinks.Add(shareLink);
+            }
+        }
+
+        // Combine all share links
+        var combinedContent = string.Join(Environment.NewLine, shareLinks);
+
+        // Base64 encode
+        return Utils.Base64Encode(combinedContent);
     }
 }

@@ -56,6 +56,14 @@ public class SpeedtestService(Config config, Func<SpeedTestResult, Task> updateF
             case ESpeedActionType.Mixedtest:
                 await RunMixedTestAsync(lstSelected, _config.SpeedTestItem.MixedConcurrencyCount, true, exitLoopKey);
                 break;
+
+            case ESpeedActionType.Googleping:
+                await RunGooglePingBatchAsync(lstSelected, exitLoopKey);
+                break;
+
+            case ESpeedActionType.Huaweiping:
+                await RunHuaweiPingBatchAsync(lstSelected, exitLoopKey);
+                break;
         }
     }
 
@@ -91,6 +99,8 @@ public class SpeedtestService(Config config, Func<SpeedTestResult, Task> updateF
             {
                 case ESpeedActionType.Tcping:
                 case ESpeedActionType.Realping:
+                case ESpeedActionType.Googleping:
+                case ESpeedActionType.Huaweiping:
                     await UpdateFunc(it.IndexId, ResUI.Speedtesting, "");
                     ProfileExManager.Instance.SetTestDelay(it.IndexId, 0);
                     break;
@@ -118,25 +128,20 @@ public class SpeedtestService(Config config, Func<SpeedTestResult, Task> updateF
 
     private async Task RunTcpingAsync(List<ServerTestItem> selecteds)
     {
-        List<Task> tasks = [];
         foreach (var it in selecteds)
         {
-            tasks.Add(Task.Run(async () =>
+            try
             {
-                try
-                {
-                    var responseTime = await GetTcpingTime(it.Address, it.Port);
+                var responseTime = await GetTcpingTime(it.Address, it.Port);
 
-                    ProfileExManager.Instance.SetTestDelay(it.IndexId, responseTime);
-                    await UpdateFunc(it.IndexId, responseTime.ToString());
-                }
-                catch (Exception ex)
-                {
-                    Logging.SaveLog(_tag, ex);
-                }
-            }));
+                ProfileExManager.Instance.SetTestDelay(it.IndexId, responseTime);
+                await UpdateFunc(it.IndexId, responseTime.ToString());
+            }
+            catch (Exception ex)
+            {
+                Logging.SaveLog(_tag, ex);
+            }
         }
-        await Task.WhenAll(tasks);
     }
 
     private async Task RunRealPingBatchAsync(List<ServerTestItem> lstSelected, string exitLoopKey, int pageSize = 0)
@@ -181,6 +186,170 @@ public class SpeedtestService(Config config, Func<SpeedTestResult, Task> updateF
         }
     }
 
+    private async Task RunGooglePingBatchAsync(List<ServerTestItem> lstSelected, string exitLoopKey, int pageSize = 0)
+    {
+        if (pageSize <= 0)
+        {
+            pageSize = lstSelected.Count < Global.SpeedTestPageSize ? lstSelected.Count : Global.SpeedTestPageSize;
+        }
+        var lstTest = GetTestBatchItem(lstSelected, pageSize);
+
+        foreach (var lst in lstTest)
+        {
+            await RunGooglePingAsync(lst, exitLoopKey);
+            await Task.Delay(100);
+        }
+    }
+
+    private async Task RunHuaweiPingBatchAsync(List<ServerTestItem> lstSelected, string exitLoopKey, int pageSize = 0)
+    {
+        if (pageSize <= 0)
+        {
+            pageSize = lstSelected.Count < Global.SpeedTestPageSize ? lstSelected.Count : Global.SpeedTestPageSize;
+        }
+        var lstTest = GetTestBatchItem(lstSelected, pageSize);
+
+        foreach (var lst in lstTest)
+        {
+            await RunHuaweiPingAsync(lst, exitLoopKey);
+            await Task.Delay(100);
+        }
+    }
+
+    private async Task<bool> RunGooglePingAsync(List<ServerTestItem> lst, string exitLoopKey)
+    {
+        foreach (var it in lst)
+        {
+            if (ShouldStopTest(exitLoopKey))
+            {
+                await UpdateFunc(it.IndexId, "", ResUI.SpeedtestingSkip);
+                continue;
+            }
+
+            ProcessService processService = null;
+            try
+            {
+                processService = await CoreManager.Instance.LoadCoreConfigSpeedtest(it);
+                if (processService is null)
+                {
+                    await UpdateFunc(it.IndexId, "", ResUI.FailedToRunCore);
+                    continue;
+                }
+
+                await Task.Delay(1000);
+
+                var delay = await DoGooglePing(it);
+                await UpdateFunc(it.IndexId, delay > 0 ? delay.ToString() : "Failed", "");
+                ProfileExManager.Instance.SetTestDelay(it.IndexId, delay > 0 ? (int)delay : 0);
+            }
+            catch (Exception ex)
+            {
+                await UpdateFunc(it.IndexId, "", "Failed");
+                Logging.SaveLog(ex.Message, ex);
+            }
+            finally
+            {
+                processService?.Dispose();
+            }
+        }
+
+        return true;
+    }
+
+    private async Task<bool> RunHuaweiPingAsync(List<ServerTestItem> lst, string exitLoopKey)
+    {
+        foreach (var it in lst)
+        {
+            if (ShouldStopTest(exitLoopKey))
+            {
+                await UpdateFunc(it.IndexId, "", ResUI.SpeedtestingSkip);
+                continue;
+            }
+
+            ProcessService processService = null;
+            try
+            {
+                processService = await CoreManager.Instance.LoadCoreConfigSpeedtest(it);
+                if (processService is null)
+                {
+                    await UpdateFunc(it.IndexId, "", ResUI.FailedToRunCore);
+                    continue;
+                }
+
+                await Task.Delay(1000);
+
+                var delay = await DoHuaweiPing(it);
+                await UpdateFunc(it.IndexId, delay > 0 ? delay.ToString() : "Failed", "");
+                ProfileExManager.Instance.SetTestDelay(it.IndexId, delay > 0 ? (int)delay : 0);
+            }
+            catch (Exception ex)
+            {
+                await UpdateFunc(it.IndexId, "", "Failed");
+                Logging.SaveLog(ex.Message, ex);
+            }
+            finally
+            {
+                processService?.Dispose();
+            }
+        }
+
+        return true;
+    }
+
+    private async Task<long> DoGooglePing(ServerTestItem it)
+    {
+        try
+        {
+            var httpPort = _config.Inbound.FirstOrDefault()?.LocalPort ?? 10808;
+            var httpClientHandler = new HttpClientHandler
+            {
+                Proxy = new System.Net.WebProxy("http://127.0.0.1:" + httpPort),
+                UseProxy = true
+            };
+
+            using var client = new HttpClient(httpClientHandler) { Timeout = TimeSpan.FromSeconds(_config.SpeedTestItem.SpeedTestTimeout) };
+            var startTime = DateTime.Now;
+            var response = await client.GetAsync("http://google.com/generate_204");
+            var endTime = DateTime.Now;
+
+            if (response.IsSuccessStatusCode)
+            {
+                return (long)(endTime - startTime).TotalMilliseconds;
+            }
+        }
+        catch
+        {
+        }
+        return 0;
+    }
+
+    private async Task<long> DoHuaweiPing(ServerTestItem it)
+    {
+        try
+        {
+            var httpPort = _config.Inbound.FirstOrDefault()?.LocalPort ?? 10808;
+            var httpClientHandler = new HttpClientHandler
+            {
+                Proxy = new System.Net.WebProxy("http://127.0.0.1:" + httpPort),
+                UseProxy = true
+            };
+
+            using var client = new HttpClient(httpClientHandler) { Timeout = TimeSpan.FromSeconds(_config.SpeedTestItem.SpeedTestTimeout) };
+            var startTime = DateTime.Now;
+            var response = await client.GetAsync("http://connectivitycheck.platform.hicloud.com/generate_204");
+            var endTime = DateTime.Now;
+
+            if (response.IsSuccessStatusCode)
+            {
+                return (long)(endTime - startTime).TotalMilliseconds;
+            }
+        }
+        catch
+        {
+        }
+        return 0;
+    }
+
     private async Task<bool> RunRealPingAsync(List<ServerTestItem> selecteds, string exitLoopKey)
     {
         ProcessService processService = null;
@@ -193,7 +362,6 @@ public class SpeedtestService(Config config, Func<SpeedTestResult, Task> updateF
             }
             await Task.Delay(1000);
 
-            List<Task> tasks = new();
             foreach (var it in selecteds)
             {
                 if (!it.AllowTest)
@@ -207,12 +375,8 @@ public class SpeedtestService(Config config, Func<SpeedTestResult, Task> updateF
                     return false;
                 }
 
-                tasks.Add(Task.Run(async () =>
-                {
-                    await DoRealPing(it);
-                }));
+                await DoRealPing(it);
             }
-            await Task.WhenAll(tasks);
         }
         catch (Exception ex)
         {
@@ -230,9 +394,7 @@ public class SpeedtestService(Config config, Func<SpeedTestResult, Task> updateF
 
     private async Task RunMixedTestAsync(List<ServerTestItem> selecteds, int concurrencyCount, bool blSpeedTest, string exitLoopKey)
     {
-        using var concurrencySemaphore = new SemaphoreSlim(concurrencyCount);
         var downloadHandle = new DownloadService();
-        List<Task> tasks = new();
         foreach (var it in selecteds)
         {
             if (ShouldStopTest(exitLoopKey))
@@ -240,56 +402,50 @@ public class SpeedtestService(Config config, Func<SpeedTestResult, Task> updateF
                 await UpdateFunc(it.IndexId, "", ResUI.SpeedtestingSkip);
                 continue;
             }
-            await concurrencySemaphore.WaitAsync();
 
-            tasks.Add(Task.Run(async () =>
+            ProcessService processService = null;
+            try
             {
-                ProcessService processService = null;
-                try
+                processService = await CoreManager.Instance.LoadCoreConfigSpeedtest(it);
+                if (processService is null)
                 {
-                    processService = await CoreManager.Instance.LoadCoreConfigSpeedtest(it);
-                    if (processService is null)
+                    await UpdateFunc(it.IndexId, "", ResUI.FailedToRunCore);
+                    continue;
+                }
+
+                await Task.Delay(1000);
+
+                var delay = await DoRealPing(it);
+                if (blSpeedTest)
+                {
+                    if (ShouldStopTest(exitLoopKey))
                     {
-                        await UpdateFunc(it.IndexId, "", ResUI.FailedToRunCore);
-                        return;
+                        await UpdateFunc(it.IndexId, "", ResUI.SpeedtestingSkip);
+                        continue;
                     }
 
-                    await Task.Delay(1000);
-
-                    var delay = await DoRealPing(it);
-                    if (blSpeedTest)
+                    if (delay > 0)
                     {
-                        if (ShouldStopTest(exitLoopKey))
-                        {
-                            await UpdateFunc(it.IndexId, "", ResUI.SpeedtestingSkip);
-                            return;
-                        }
-
-                        if (delay > 0)
-                        {
-                            await DoSpeedTest(downloadHandle, it);
-                        }
-                        else
-                        {
-                            await UpdateFunc(it.IndexId, "", ResUI.SpeedtestingSkip);
-                        }
+                        await DoSpeedTest(downloadHandle, it);
+                    }
+                    else
+                    {
+                        await UpdateFunc(it.IndexId, "", ResUI.SpeedtestingSkip);
                     }
                 }
-                catch (Exception ex)
+            }
+            catch (Exception ex)
+            {
+                Logging.SaveLog(_tag, ex);
+            }
+            finally
+            {
+                if (processService != null)
                 {
-                    Logging.SaveLog(_tag, ex);
+                    await processService?.StopAsync();
                 }
-                finally
-                {
-                    if (processService != null)
-                    {
-                        await processService?.StopAsync();
-                    }
-                    concurrencySemaphore.Release();
-                }
-            }));
+            }
         }
-        await Task.WhenAll(tasks);
     }
 
     private async Task<int> DoRealPing(ServerTestItem it)

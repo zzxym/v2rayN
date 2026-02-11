@@ -3,13 +3,11 @@ namespace ServiceLib.ViewModels;
 public class CheckUpdateViewModel : MyReactiveObject
 {
     private const string _geo = "GeoFiles";
-    private readonly string _v2rayN = ECoreType.v2rayN.ToString();
     private List<CheckUpdateModel> _lstUpdated = [];
     private static readonly string _tag = "CheckUpdateViewModel";
 
     public IObservableCollection<CheckUpdateModel> CheckUpdateModels { get; } = new ObservableCollectionExtended<CheckUpdateModel>();
     public ReactiveCommand<Unit, Unit> CheckUpdateCmd { get; }
-    [Reactive] public bool EnableCheckPreReleaseUpdate { get; set; }
 
     public CheckUpdateViewModel(Func<EViewAction, object?, Task<bool>>? updateView)
     {
@@ -20,15 +18,7 @@ public class CheckUpdateViewModel : MyReactiveObject
         CheckUpdateCmd.ThrownExceptions.Subscribe(ex =>
         {
             Logging.SaveLog(_tag, ex);
-            _ = UpdateView(_v2rayN, ex.Message);
         });
-
-        EnableCheckPreReleaseUpdate = _config.CheckUpdateItem.CheckPreReleaseUpdate;
-
-        this.WhenAnyValue(
-        x => x.EnableCheckPreReleaseUpdate,
-        y => y == true)
-            .Subscribe(c => _config.CheckUpdateItem.CheckPreReleaseUpdate = EnableCheckPreReleaseUpdate);
 
         RefreshCheckUpdateItems();
     }
@@ -37,32 +27,18 @@ public class CheckUpdateViewModel : MyReactiveObject
     {
         CheckUpdateModels.Clear();
 
-        if (RuntimeInformation.ProcessArchitecture != Architecture.X86)
+        //Not Windows and under Win10
+        if (!(Utils.IsWindows() && Environment.OSVersion.Version.Major < 10))
         {
-            CheckUpdateModels.Add(GetCheckUpdateModel(_v2rayN));
-            //Not Windows and under Win10
-            if (!(Utils.IsWindows() && Environment.OSVersion.Version.Major < 10))
-            {
-                CheckUpdateModels.Add(GetCheckUpdateModel(ECoreType.Xray.ToString()));
-                CheckUpdateModels.Add(GetCheckUpdateModel(ECoreType.mihomo.ToString()));
-                CheckUpdateModels.Add(GetCheckUpdateModel(ECoreType.sing_box.ToString()));
-            }
+            CheckUpdateModels.Add(GetCheckUpdateModel(ECoreType.Xray.ToString()));
+            CheckUpdateModels.Add(GetCheckUpdateModel(ECoreType.mihomo.ToString()));
+            CheckUpdateModels.Add(GetCheckUpdateModel(ECoreType.sing_box.ToString()));
         }
         CheckUpdateModels.Add(GetCheckUpdateModel(_geo));
     }
 
     private CheckUpdateModel GetCheckUpdateModel(string coreType)
     {
-        if (coreType == _v2rayN && Utils.IsPackagedInstall())
-        {
-            return new()
-            {
-                IsSelected = false,
-                CoreType = coreType,
-                Remarks = ResUI.menuCheckUpdate + " (Not Support)",
-            };
-        }
-
         return new()
         {
             IsSelected = _config.CheckUpdateItem.SelectedCoreTypes?.Contains(coreType) ?? true,
@@ -102,19 +78,6 @@ public class CheckUpdateViewModel : MyReactiveObject
             {
                 await CheckUpdateGeo();
             }
-            else if (item.CoreType == _v2rayN)
-            {
-                if (Utils.IsPackagedInstall())
-                {
-                    await UpdateView(_v2rayN, "Not Support");
-                    continue;
-                }
-                await CheckUpdateN(EnableCheckPreReleaseUpdate);
-            }
-            else if (item.CoreType == ECoreType.Xray.ToString())
-            {
-                await CheckUpdateCore(item, EnableCheckPreReleaseUpdate);
-            }
             else
             {
                 await CheckUpdateCore(item, false);
@@ -152,21 +115,6 @@ public class CheckUpdateViewModel : MyReactiveObject
             .ContinueWith(t => UpdatedPlusPlus(_geo, ""));
     }
 
-    private async Task CheckUpdateN(bool preRelease)
-    {
-        async Task _updateUI(bool success, string msg)
-        {
-            await UpdateView(_v2rayN, msg);
-            if (success)
-            {
-                await UpdateView(_v2rayN, ResUI.OperationSuccess);
-                UpdatedPlusPlus(_v2rayN, msg);
-            }
-        }
-        await new UpdateService(_config, _updateUI).CheckUpdateGuiN(preRelease)
-            .ContinueWith(t => UpdatedPlusPlus(_v2rayN, ""));
-    }
-
     private async Task CheckUpdateCore(CheckUpdateModel model, bool preRelease)
     {
         async Task _updateUI(bool success, string msg)
@@ -191,12 +139,6 @@ public class CheckUpdateViewModel : MyReactiveObject
             await UpdateFinishedSub(false);
             await Task.Delay(2000);
             await UpgradeCore();
-
-            if (_lstUpdated.Any(x => x.CoreType == _v2rayN && x.IsFinished == true))
-            {
-                await Task.Delay(1000);
-                await UpgradeN();
-            }
             await Task.Delay(1000);
             await UpdateFinishedSub(true);
         }
@@ -221,35 +163,6 @@ public class CheckUpdateViewModel : MyReactiveObject
         else
         {
             await CoreManager.Instance.CoreStop();
-        }
-    }
-
-    private async Task UpgradeN()
-    {
-        try
-        {
-            var fileName = _lstUpdated.FirstOrDefault(x => x.CoreType == _v2rayN)?.FileName;
-            if (fileName.IsNullOrEmpty())
-            {
-                return;
-            }
-            if (!Utils.UpgradeAppExists(out var upgradeFileName))
-            {
-                await UpdateView(_v2rayN, ResUI.UpgradeAppNotExistTip);
-                NoticeManager.Instance.SendMessageAndEnqueue(ResUI.UpgradeAppNotExistTip);
-                Logging.SaveLog("UpgradeApp does not exist");
-                return;
-            }
-
-            var id = ProcUtils.ProcessStart(upgradeFileName, fileName, Utils.StartupPath());
-            if (id > 0)
-            {
-                await AppManager.Instance.AppExitAsync(true);
-            }
-        }
-        catch (Exception ex)
-        {
-            await UpdateView(_v2rayN, ex.Message);
         }
     }
 

@@ -23,9 +23,11 @@ fi
 echo $Arch2
 
 # basic
+# Fix version number format for Debian (must start with digit)
+DebianVersion=$(echo "$Version" | sed 's/^[^0-9]*//')
 cat >"${PackagePath}/DEBIAN/control" <<-EOF
 Package: v2rayN
-Version: $Version
+Version: $DebianVersion
 Architecture: $Arch2
 Maintainer: https://github.com/2dust/v2rayN
 Depends: libc6 (>= 2.34), fontconfig (>= 2.13.1), desktop-file-utils (>= 0.26), xdg-utils (>= 1.1.3), coreutils (>= 8.32), bash (>= 5.1), libfreetype6 (>= 2.11)

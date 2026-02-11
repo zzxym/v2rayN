@@ -72,6 +72,7 @@ jobs:
         tag: ${{ github.event.inputs.release_tag }}
         file_glob: true
         prerelease: true
+        overwrite: true
 
     # release zip archive
     - name: Package release zip archive
@@ -89,6 +90,7 @@ jobs:
         tag: ${{ github.event.inputs.release_tag }}
         file_glob: true
         prerelease: true
+        overwrite: true
 
   rpm:
     needs: build
@@ -202,3 +204,4 @@ jobs:
         tag: ${{ env.RELEASE_TAG }}
         file_glob: true
         prerelease: true
+        overwrite: true

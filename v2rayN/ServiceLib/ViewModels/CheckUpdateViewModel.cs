@@ -9,10 +9,26 @@ public class CheckUpdateViewModel : MyReactiveObject
     public IObservableCollection<CheckUpdateModel> CheckUpdateModels { get; } = new ObservableCollectionExtended<CheckUpdateModel>();
     public ReactiveCommand<Unit, Unit> CheckUpdateCmd { get; }
 
+    private bool _enableCheckPreReleaseUpdate;
+    public bool EnableCheckPreReleaseUpdate
+    {
+        get => _enableCheckPreReleaseUpdate;
+        set
+        {
+            if (this.RaiseAndSetIfChanged(ref _enableCheckPreReleaseUpdate, value))
+            {
+                _config.CheckUpdateItem.CheckPreReleaseUpdate = value;
+            }
+        }
+    }
+
     public CheckUpdateViewModel(Func<EViewAction, object?, Task<bool>>? updateView)
     {
         _config = AppManager.Instance.Config;
         _updateView = updateView;
+
+        // Initialize properties from config
+        _enableCheckPreReleaseUpdate = _config.CheckUpdateItem.CheckPreReleaseUpdate;
 
         CheckUpdateCmd = ReactiveCommand.CreateFromTask(CheckUpdate);
         CheckUpdateCmd.ThrownExceptions.Subscribe(ex =>

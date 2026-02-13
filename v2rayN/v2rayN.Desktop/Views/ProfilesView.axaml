@@ -94,6 +94,15 @@
                         <PathIcon Data="{StaticResource building_ping}" />
                     </Button.Content>
                 </Button>
+                <Button
+                    x:Name="btnExportSubInfo"
+                    Margin="{StaticResource MarginLr4}"
+                    Classes="IconButton Success"
+                    ToolTip.Tip="导出订阅信息">
+                    <Button.Content>
+                        <PathIcon Data="{StaticResource building_copy}" />
+                    </Button.Content>
+                </Button>
 
             </WrapPanel>
             <DataGrid

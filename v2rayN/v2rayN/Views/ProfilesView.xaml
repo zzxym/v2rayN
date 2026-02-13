@@ -96,6 +96,15 @@
                     ToolTip="{x:Static resx:ResUI.menuMixedTestServer}">
                     <materialDesign:PackIcon VerticalAlignment="Center" Kind="Speedometer" />
                 </Button>
+                <Button
+                    x:Name="btnExportSubInfo"
+                    Width="30"
+                    Height="30"
+                    Margin="{StaticResource MarginLeftRight4}"
+                    Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
+                    ToolTip="导出订阅信息">
+                    <materialDesign:PackIcon VerticalAlignment="Center" Kind="Download" />
+                </Button>
             </WrapPanel>
             <DataGrid
                 x:Name="lstProfiles"

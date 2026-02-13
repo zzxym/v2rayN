@@ -53,6 +53,7 @@ public partial class ProfilesView : ReactiveUserControl<ProfilesViewModel>
             this.BindCommand(ViewModel, vm => vm.AddSubCmd, v => v.menuSubAdd).DisposeWith(disposables);
             this.BindCommand(ViewModel, vm => vm.DeleteSubCmd, v => v.menuSubDelete).DisposeWith(disposables);
             this.BindCommand(ViewModel, vm => vm.ExportSubCmd, v => v.menuSubExport).DisposeWith(disposables);
+            this.BindCommand(ViewModel, vm => vm.ExportSubCmd, v => v.btnExportSubInfo).DisposeWith(disposables);
 
             //servers delete
             this.BindCommand(ViewModel, vm => vm.EditServerCmd, v => v.menuEditServer).DisposeWith(disposables);

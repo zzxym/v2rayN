@@ -20,8 +20,7 @@ public partial class ProfilesView : ReactiveUserControl<ProfilesViewModel>
         _config = AppManager.Instance.Config;
         _window = window;
 
-        menuSelectAll.Click += menuSelectAll_Click;
-        btnAutofitColumnWidth.Click += BtnAutofitColumnWidth_Click;
+
         txtServerFilter.KeyDown += TxtServerFilter_KeyDown;
         lstProfiles.KeyDown += LstProfiles_KeyDown;
         lstProfiles.SelectionChanged += lstProfiles_SelectionChanged;
@@ -37,63 +36,27 @@ public partial class ProfilesView : ReactiveUserControl<ProfilesViewModel>
         //    lstProfiles.Drop += LstProfiles_Drop;
         //}
 
-        ViewModel = new ProfilesViewModel(UpdateViewHandler);
+        ViewModel = new ProfilesViewModel(null);
 
         this.WhenActivated(disposables =>
         {
             this.OneWayBind(ViewModel, vm => vm.ProfileItems, v => v.lstProfiles.ItemsSource).DisposeWith(disposables);
             this.Bind(ViewModel, vm => vm.SelectedProfile, v => v.lstProfiles.SelectedItem).DisposeWith(disposables);
 
-            // this.OneWayBind(ViewModel, vm => vm.SubItems, v => v.lstGroup.ItemsSource).DisposeWith(disposables);
             this.Bind(ViewModel, vm => vm.SelectedSub, v => v.lstGroup.SelectedItem).DisposeWith(disposables);
             this.Bind(ViewModel, vm => vm.ServerFilter, v => v.txtServerFilter.Text).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.AddSubCmd, v => v.btnAddSub).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.EditSubCmd, v => v.btnEditSub).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.EditSubCmd, v => v.menuSubEdit).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.AddSubCmd, v => v.menuSubAdd).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.DeleteSubCmd, v => v.menuSubDelete).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.ExportSubCmd, v => v.menuSubExport).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.ExportSubCmd, v => v.btnExportSubInfo).DisposeWith(disposables);
 
-            //servers delete
-            this.BindCommand(ViewModel, vm => vm.EditServerCmd, v => v.menuEditServer).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.RemoveServerCmd, v => v.menuRemoveServer).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.RemoveDuplicateServerCmd, v => v.menuRemoveDuplicateServer).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.CopyServerCmd, v => v.menuCopyServer).DisposeWith(disposables);
+            //servers
             this.BindCommand(ViewModel, vm => vm.SetDefaultServerCmd, v => v.menuSetDefaultServer).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.ShareServerCmd, v => v.menuShareServer).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.GenGroupMultipleServerXrayRandomCmd, v => v.menuGenGroupMultipleServerXrayRandom).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.GenGroupMultipleServerXrayRoundRobinCmd, v => v.menuGenGroupMultipleServerXrayRoundRobin).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.GenGroupMultipleServerXrayLeastPingCmd, v => v.menuGenGroupMultipleServerXrayLeastPing).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.GenGroupMultipleServerXrayLeastLoadCmd, v => v.menuGenGroupMultipleServerXrayLeastLoad).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.GenGroupMultipleServerSingBoxLeastPingCmd, v => v.menuGenGroupMultipleServerSingBoxLeastPing).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.GenGroupMultipleServerSingBoxFallbackCmd, v => v.menuGenGroupMultipleServerSingBoxFallback).DisposeWith(disposables);
-
-            //servers move
-            //this.OneWayBind(ViewModel, vm => vm.SubItems, v => v.cmbMoveToGroup.ItemsSource).DisposeWith(disposables);
-            //this.Bind(ViewModel, vm => vm.SelectedMoveToGroup, v => v.cmbMoveToGroup.SelectedItem).DisposeWith(disposables);
-
-            this.BindCommand(ViewModel, vm => vm.MoveTopCmd, v => v.menuMoveTop).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.MoveUpCmd, v => v.menuMoveUp).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.MoveDownCmd, v => v.menuMoveDown).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.MoveBottomCmd, v => v.menuMoveBottom).DisposeWith(disposables);
 
             //servers ping
             this.BindCommand(ViewModel, vm => vm.MixedTestServerCmd, v => v.menuMixedTestServer).DisposeWith(disposables);
             this.BindCommand(ViewModel, vm => vm.TcpingServerCmd, v => v.menuTcpingServer).DisposeWith(disposables);
-
             this.BindCommand(ViewModel, vm => vm.SpeedServerCmd, v => v.menuSpeedServer).DisposeWith(disposables);
             this.BindCommand(ViewModel, vm => vm.GooglePingServerCmd, v => v.menuGooglePingServer).DisposeWith(disposables);
             this.BindCommand(ViewModel, vm => vm.HuaweiPingServerCmd, v => v.menuHuaweiPingServer).DisposeWith(disposables);
             this.BindCommand(ViewModel, vm => vm.SortServerResultCmd, v => v.menuSortServerResult).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.RemoveInvalidServerResultCmd, v => v.menuRemoveInvalidServerResult).DisposeWith(disposables);
             this.BindCommand(ViewModel, vm => vm.FastRealPingCmd, v => v.btnFastRealPing).DisposeWith(disposables);
-
-            //servers export
-            this.BindCommand(ViewModel, vm => vm.Export2ClientConfigCmd, v => v.menuExport2ClientConfig).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.Export2ClientConfigClipboardCmd, v => v.menuExport2ClientConfigClipboard).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.Export2ShareUrlCmd, v => v.menuExport2ShareUrl).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.Export2ShareUrlBase64Cmd, v => v.menuExport2ShareUrlBase64).DisposeWith(disposables);
 
             AppEvents.AppExitRequested
               .AsObservable()
@@ -101,11 +64,7 @@ public partial class ProfilesView : ReactiveUserControl<ProfilesViewModel>
               .Subscribe(_ => StorageUI())
               .DisposeWith(disposables);
 
-            AppEvents.AdjustMainLvColWidthRequested
-                .AsObservable()
-                .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(_ => AutofitColumnWidth())
-                .DisposeWith(disposables);
+
         });
 
         RestoreUI();
@@ -125,111 +84,11 @@ public partial class ProfilesView : ReactiveUserControl<ProfilesViewModel>
 
     #region Event
 
-    private async Task<bool> UpdateViewHandler(EViewAction action, object? obj)
-    {
-        switch (action)
-        {
-            case EViewAction.SetClipboardData:
-                if (obj is null)
-                {
-                    return false;
-                }
 
-                await AvaUtils.SetClipboardData(this, (string)obj);
-                break;
 
-            case EViewAction.ProfilesFocus:
-                lstProfiles.Focus();
-                break;
 
-            case EViewAction.ShowYesNo:
-                if (await UI.ShowYesNo(_window, ResUI.RemoveServer) != ButtonResult.Yes)
-                {
-                    return false;
-                }
-                break;
 
-            case EViewAction.SaveFileDialog:
-                if (obj is null)
-                {
-                    return false;
-                }
 
-                var fileName = await UI.SaveFileDialog(_window, "");
-                if (fileName.IsNullOrEmpty())
-                {
-                    return false;
-                }
-                ViewModel?.Export2ClientConfigResult(fileName, (ProfileItem)obj);
-                break;
-
-            case EViewAction.AddServerWindow:
-                if (obj is null)
-                {
-                    return false;
-                }
-
-                return await new AddServerWindow((ProfileItem)obj).ShowDialog<bool>(_window);
-
-            case EViewAction.AddServer2Window:
-                if (obj is null)
-                {
-                    return false;
-                }
-
-                return await new AddServer2Window((ProfileItem)obj).ShowDialog<bool>(_window);
-
-            case EViewAction.AddGroupServerWindow:
-                if (obj is null)
-                {
-                    return false;
-                }
-
-                return await new AddGroupServerWindow((ProfileItem)obj).ShowDialog<bool>(_window);
-
-            case EViewAction.ShareServer:
-                if (obj is null)
-                {
-                    return false;
-                }
-
-                await ShareServer((string)obj);
-                break;
-
-            case EViewAction.SubEditWindow:
-                if (obj is null)
-                {
-                    return false;
-                }
-
-                return await new SubEditWindow((SubItem)obj).ShowDialog<bool>(_window);
-
-            case EViewAction.DispatcherRefreshServersBiz:
-                Dispatcher.UIThread.Post(RefreshServersBiz, DispatcherPriority.Default);
-                break;
-        }
-
-        return await Task.FromResult(true);
-    }
-
-    public async Task ShareServer(string url)
-    {
-        if (url.IsNullOrEmpty())
-        {
-            return;
-        }
-
-        var dialog = new QrcodeView(url);
-        await DialogHost.Show(dialog);
-    }
-
-    public void RefreshServersBiz()
-    {
-        if (lstProfiles.SelectedIndex >= 0)
-        {
-            lstProfiles.ScrollIntoView(lstProfiles.SelectedItem, null);
-        }
-    }
 
     private void lstProfiles_SelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
@@ -247,14 +106,7 @@ public partial class ProfilesView : ReactiveUserControl<ProfilesViewModel>
             return;
         }
 
-        if (_config.UiItem.DoubleClick2Activate)
-        {
-            ViewModel?.SetDefaultServer();
-        }
-        else
-        {
-            ViewModel?.EditServerAsync();
-        }
+        ViewModel?.SetDefaultServer();
     }
 
     private void LstProfiles_LoadingRow(object? sender, DataGridRowEventArgs e)
@@ -274,10 +126,7 @@ public partial class ProfilesView : ReactiveUserControl<ProfilesViewModel>
     //    ViewModel?.SortServer(colName);
     //}
 
-    private void menuSelectAll_Click(object? sender, RoutedEventArgs e)
-    {
-        lstProfiles.SelectAll();
-    }
+
 
     private void LstProfiles_KeyDown(object? sender, KeyEventArgs e)
     {
@@ -285,34 +134,6 @@ public partial class ProfilesView : ReactiveUserControl<ProfilesViewModel>
         {
             switch (e.Key)
             {
-                case Key.A:
-                    menuSelectAll_Click(null, null);
-                    break;
-
-                case Key.C:
-                    ViewModel?.Export2ShareUrlAsync(false);
-                    break;
-
-                case Key.D:
-                    ViewModel?.EditServerAsync();
-                    break;
-
-                case Key.F:
-                    ViewModel?.ShareServerAsync();
-                    break;
-
-                case Key.O:
-                    ViewModel?.ServerSpeedtest(ESpeedActionType.Tcping);
-                    break;
-
-                case Key.R:
-                    ViewModel?.ServerSpeedtest(ESpeedActionType.Realping);
-                    break;
-
-                case Key.T:
-                    ViewModel?.ServerSpeedtest(ESpeedActionType.Speedtest);
-                    break;
-
                 case Key.E:
                     ViewModel?.ServerSpeedtest(ESpeedActionType.Mixedtest);
                     break;
@@ -323,29 +144,7 @@ public partial class ProfilesView : ReactiveUserControl<ProfilesViewModel>
             switch (e.Key)
             {
                 case Key.Enter:
-                    //case Key.Return:
                     ViewModel?.SetDefaultServer();
-                    break;
-
-                case Key.Delete:
-                case Key.Back:
-                    ViewModel?.RemoveServerAsync();
-                    break;
-
-                case Key.T:
-                    ViewModel?.MoveServer(EMove.Top);
-                    break;
-
-                case Key.U:
-                    ViewModel?.MoveServer(EMove.Up);
-                    break;
-
-                case Key.D:
-                    ViewModel?.MoveServer(EMove.Down);
-                    break;
-
-                case Key.B:
-                    ViewModel?.MoveServer(EMove.Bottom);
                     break;
 
                 case Key.Escape:
@@ -355,43 +154,7 @@ public partial class ProfilesView : ReactiveUserControl<ProfilesViewModel>
         }
     }
 
-    private void BtnAutofitColumnWidth_Click(object? sender, RoutedEventArgs e)
-    {
-        AutofitColumnWidth();
-    }
 
-    private void AutofitColumnWidth()
-    {
-        try
-        {
-            //First scroll horizontally to the initial position to avoid the control crash bug
-            if (lstProfiles.SelectedIndex >= 0)
-            {
-                lstProfiles.ScrollIntoView(lstProfiles.SelectedItem, lstProfiles.Columns[0]);
-            }
-            else
-            {
-                var model = lstProfiles.ItemsSource.Cast<ProfileItemModel>();
-                if (model.Any())
-                {
-                    lstProfiles.ScrollIntoView(model.First(), lstProfiles.Columns[0]);
-                }
-                else
-                {
-                    return;
-                }
-            }
-
-            foreach (var it in lstProfiles.Columns)
-            {
-                it.Width = new DataGridLength(1, DataGridLengthUnitType.Auto);
-            }
-        }
-        catch (Exception ex)
-        {
-            Logging.SaveLog("ProfilesView", ex);
-        }
-    }
 
     private void TxtServerFilter_KeyDown(object? sender, KeyEventArgs e)
     {

@@ -26,38 +26,14 @@ public class ProfilesViewModel : MyReactiveObject
     public SubItem SelectedSub { get; set; }
 
     [Reactive]
-    public SubItem SelectedMoveToGroup { get; set; }
-
-    [Reactive]
     public string ServerFilter { get; set; }
 
     #endregion ObservableCollection
 
     #region Menu
 
-    //servers delete
-    public ReactiveCommand<Unit, Unit> EditServerCmd { get; }
-
-    public ReactiveCommand<Unit, Unit> RemoveServerCmd { get; }
-    public ReactiveCommand<Unit, Unit> RemoveDuplicateServerCmd { get; }
-    public ReactiveCommand<Unit, Unit> CopyServerCmd { get; }
+    //servers
     public ReactiveCommand<Unit, Unit> SetDefaultServerCmd { get; }
-    public ReactiveCommand<Unit, Unit> ShareServerCmd { get; }
-    public ReactiveCommand<Unit, Unit> GenGroupMultipleServerXrayRandomCmd { get; }
-    public ReactiveCommand<Unit, Unit> GenGroupMultipleServerXrayRoundRobinCmd { get; }
-    public ReactiveCommand<Unit, Unit> GenGroupMultipleServerXrayLeastPingCmd { get; }
-    public ReactiveCommand<Unit, Unit> GenGroupMultipleServerXrayLeastLoadCmd { get; }
-    public ReactiveCommand<Unit, Unit> GenGroupMultipleServerXrayFallbackCmd { get; }
-    public ReactiveCommand<Unit, Unit> GenGroupMultipleServerSingBoxLeastPingCmd { get; }
-    public ReactiveCommand<Unit, Unit> GenGroupMultipleServerSingBoxFallbackCmd { get; }
-
-    //servers move
-    public ReactiveCommand<Unit, Unit> MoveTopCmd { get; }
-
-    public ReactiveCommand<Unit, Unit> MoveUpCmd { get; }
-    public ReactiveCommand<Unit, Unit> MoveDownCmd { get; }
-    public ReactiveCommand<Unit, Unit> MoveBottomCmd { get; }
-    public ReactiveCommand<SubItem, Unit> MoveToGroupCmd { get; }
 
     //servers ping
     public ReactiveCommand<Unit, Unit> MixedTestServerCmd { get; }
@@ -68,20 +44,7 @@ public class ProfilesViewModel : MyReactiveObject
     public ReactiveCommand<Unit, Unit> GooglePingServerCmd { get; }
     public ReactiveCommand<Unit, Unit> HuaweiPingServerCmd { get; }
     public ReactiveCommand<Unit, Unit> SortServerResultCmd { get; }
-    public ReactiveCommand<Unit, Unit> RemoveInvalidServerResultCmd { get; }
     public ReactiveCommand<Unit, Unit> FastRealPingCmd { get; }
-
-    //servers export
-    public ReactiveCommand<Unit, Unit> Export2ClientConfigCmd { get; }
-
-    public ReactiveCommand<Unit, Unit> Export2ClientConfigClipboardCmd { get; }
-    public ReactiveCommand<Unit, Unit> Export2ShareUrlCmd { get; }
-    public ReactiveCommand<Unit, Unit> Export2ShareUrlBase64Cmd { get; }
-
-    public ReactiveCommand<Unit, Unit> AddSubCmd { get; }
-    public ReactiveCommand<Unit, Unit> EditSubCmd { get; }
-    public ReactiveCommand<Unit, Unit> DeleteSubCmd { get; }
-    public ReactiveCommand<Unit, Unit> ExportSubCmd { get; }
 
     #endregion Menu
 
@@ -102,91 +65,17 @@ public class ProfilesViewModel : MyReactiveObject
             x => x.SelectedSub,
             y => y != null && !y.Remarks.IsNullOrEmpty() && _config.SubIndexId != y.Id)
                 .Subscribe(async c => await SubSelectedChangedAsync(c));
-        this.WhenAnyValue(
-             x => x.SelectedMoveToGroup,
-             y => y != null && !y.Remarks.IsNullOrEmpty())
-                 .Subscribe(async c => await MoveToGroup(c));
 
         this.WhenAnyValue(
           x => x.ServerFilter,
           y => y != null && _serverFilter != y)
               .Subscribe(async c => await ServerFilterChanged(c));
 
-        //servers delete
-        EditServerCmd = ReactiveCommand.CreateFromTask(async () =>
-        {
-            await EditServerAsync();
-        }, canEditRemove);
-        RemoveServerCmd = ReactiveCommand.CreateFromTask(async () =>
-        {
-            await RemoveServerAsync();
-        }, canEditRemove);
-        RemoveDuplicateServerCmd = ReactiveCommand.CreateFromTask(async () =>
-        {
-            await RemoveDuplicateServer();
-        });
-        CopyServerCmd = ReactiveCommand.CreateFromTask(async () =>
-        {
-            await CopyServer();
-        }, canEditRemove);
+        //servers
         SetDefaultServerCmd = ReactiveCommand.CreateFromTask(async () =>
         {
             await SetDefaultServer();
         }, canEditRemove);
-        ShareServerCmd = ReactiveCommand.CreateFromTask(async () =>
-        {
-            await ShareServerAsync();
-        }, canEditRemove);
-        GenGroupMultipleServerXrayRandomCmd = ReactiveCommand.CreateFromTask(async () =>
-        {
-            await GenGroupMultipleServer(ECoreType.Xray, EMultipleLoad.Random);
-        }, canEditRemove);
-        GenGroupMultipleServerXrayRoundRobinCmd = ReactiveCommand.CreateFromTask(async () =>
-        {
-            await GenGroupMultipleServer(ECoreType.Xray, EMultipleLoad.RoundRobin);
-        }, canEditRemove);
-        GenGroupMultipleServerXrayLeastPingCmd = ReactiveCommand.CreateFromTask(async () =>
-        {
-            await GenGroupMultipleServer(ECoreType.Xray, EMultipleLoad.LeastPing);
-        }, canEditRemove);
-        GenGroupMultipleServerXrayLeastLoadCmd = ReactiveCommand.CreateFromTask(async () =>
-        {
-            await GenGroupMultipleServer(ECoreType.Xray, EMultipleLoad.LeastLoad);
-        }, canEditRemove);
-        GenGroupMultipleServerXrayFallbackCmd = ReactiveCommand.CreateFromTask(async () =>
-        {
-            await GenGroupMultipleServer(ECoreType.Xray, EMultipleLoad.Fallback);
-        }, canEditRemove);
-        GenGroupMultipleServerSingBoxLeastPingCmd = ReactiveCommand.CreateFromTask(async () =>
-        {
-            await GenGroupMultipleServer(ECoreType.sing_box, EMultipleLoad.LeastPing);
-        }, canEditRemove);
-        GenGroupMultipleServerSingBoxFallbackCmd = ReactiveCommand.CreateFromTask(async () =>
-        {
-            await GenGroupMultipleServer(ECoreType.sing_box, EMultipleLoad.Fallback);
-        }, canEditRemove);
-
-        //servers move
-        MoveTopCmd = ReactiveCommand.CreateFromTask(async () =>
-        {
-            await MoveServer(EMove.Top);
-        }, canEditRemove);
-        MoveUpCmd = ReactiveCommand.CreateFromTask(async () =>
-        {
-            await MoveServer(EMove.Up);
-        }, canEditRemove);
-        MoveDownCmd = ReactiveCommand.CreateFromTask(async () =>
-        {
-            await MoveServer(EMove.Down);
-        }, canEditRemove);
-        MoveBottomCmd = ReactiveCommand.CreateFromTask(async () =>
-        {
-            await MoveServer(EMove.Bottom);
-        }, canEditRemove);
-        MoveToGroupCmd = ReactiveCommand.CreateFromTask<SubItem>(async sub =>
-        {
-            SelectedMoveToGroup = sub;
-        });
 
         //servers ping
         FastRealPingCmd = ReactiveCommand.CreateFromTask(async () =>
@@ -220,45 +109,6 @@ public class ProfilesViewModel : MyReactiveObject
         SortServerResultCmd = ReactiveCommand.CreateFromTask(async () =>
         {
             await SortServer(EServerColName.DelayVal.ToString());
-        });
-        RemoveInvalidServerResultCmd = ReactiveCommand.CreateFromTask(async () =>
-        {
-            await RemoveInvalidServerResult();
-        });
-        //servers export
-        Export2ClientConfigCmd = ReactiveCommand.CreateFromTask(async () =>
-        {
-            await Export2ClientConfigAsync(false);
-        }, canEditRemove);
-        Export2ClientConfigClipboardCmd = ReactiveCommand.CreateFromTask(async () =>
-        {
-            await Export2ClientConfigAsync(true);
-        }, canEditRemove);
-        Export2ShareUrlCmd = ReactiveCommand.CreateFromTask(async () =>
-        {
-            await Export2ShareUrlAsync(false);
-        }, canEditRemove);
-        Export2ShareUrlBase64Cmd = ReactiveCommand.CreateFromTask(async () =>
-        {
-            await Export2ShareUrlAsync(true);
-        }, canEditRemove);
-
-        //Subscription
-        AddSubCmd = ReactiveCommand.CreateFromTask(async () =>
-        {
-            await EditSubAsync(true);
-        });
-        EditSubCmd = ReactiveCommand.CreateFromTask(async () =>
-        {
-            await EditSubAsync(false);
-        });
-        DeleteSubCmd = ReactiveCommand.CreateFromTask(async () =>
-        {
-            await DeleteSubAsync();
-        });
-        ExportSubCmd = ReactiveCommand.CreateFromTask(async () =>
-        {
-            await ExportSubAsync();
         });
 
         #endregion WhenAnyValue && ReactiveCommand
@@ -294,7 +144,6 @@ public class ProfilesViewModel : MyReactiveObject
     {
         SelectedProfile = new();
         SelectedSub = new();
-        SelectedMoveToGroup = new();
 
         await RefreshSubscriptions();
         //await RefreshServers();
@@ -461,7 +310,6 @@ public class ProfilesViewModel : MyReactiveObject
                         Remarks = t.Remarks,
                         Address = t.Address,
                         Port = t.Port,
-                        //Security = t.Security,
                         Network = t.Network,
                         StreamSecurity = t.StreamSecurity,
                         Subid = t.Subid,
@@ -513,99 +361,6 @@ public class ProfilesViewModel : MyReactiveObject
         return lstSelected;
     }
 
-    public async Task EditServerAsync()
-    {
-        if (string.IsNullOrEmpty(SelectedProfile?.IndexId))
-        {
-            return;
-        }
-        var item = await AppManager.Instance.GetProfileItem(SelectedProfile.IndexId);
-        if (item is null)
-        {
-            NoticeManager.Instance.Enqueue(ResUI.PleaseSelectServer);
-            return;
-        }
-        var eConfigType = item.ConfigType;
-
-        bool? ret = false;
-        if (eConfigType == EConfigType.Custom)
-        {
-            ret = await _updateView?.Invoke(EViewAction.AddServer2Window, item);
-        }
-        else if (eConfigType.IsGroupType())
-        {
-            ret = await _updateView?.Invoke(EViewAction.AddGroupServerWindow, item);
-        }
-        else
-        {
-            ret = await _updateView?.Invoke(EViewAction.AddServerWindow, item);
-        }
-        if (ret == true)
-        {
-            await RefreshServers();
-            if (item.IndexId == _config.IndexId)
-            {
-                Reload();
-            }
-        }
-    }
-
-    public async Task RemoveServerAsync()
-    {
-        var lstSelected = await GetProfileItems(true);
-        if (lstSelected == null)
-        {
-            return;
-        }
-        if (await _updateView?.Invoke(EViewAction.ShowYesNo, null) == false)
-        {
-            return;
-        }
-        var exists = lstSelected.Exists(t => t.IndexId == _config.IndexId);
-
-        await ConfigHandler.RemoveServers(_config, lstSelected);
-        NoticeManager.Instance.Enqueue(ResUI.OperationSuccess);
-        if (lstSelected.Count == ProfileItems.Count)
-        {
-            ProfileItems.Clear();
-        }
-        await RefreshServers();
-        if (exists)
-        {
-            Reload();
-        }
-    }
-
-    private async Task RemoveDuplicateServer()
-    {
-        if (await _updateView?.Invoke(EViewAction.ShowYesNo, null) == false)
-        {
-            return;
-        }
-
-        var tuple = await ConfigHandler.DedupServerList(_config, _config.SubIndexId);
-        if (tuple.Item1 > 0 || tuple.Item2 > 0)
-        {
-            await RefreshServers();
-            Reload();
-        }
-        NoticeManager.Instance.Enqueue(string.Format(ResUI.RemoveDuplicateServerResult, tuple.Item1, tuple.Item2));
-    }
-
-    private async Task CopyServer()
-    {
-        var lstSelected = await GetProfileItems(false);
-        if (lstSelected == null)
-        {
-            return;
-        }
-        if (await ConfigHandler.CopyServer(_config, lstSelected) == 0)
-        {
-            await RefreshServers();
-            NoticeManager.Instance.Enqueue(ResUI.OperationSuccess);
-        }
-    }
-
     public async Task SetDefaultServer()
     {
         if (string.IsNullOrEmpty(SelectedProfile?.IndexId))
@@ -639,48 +394,6 @@ public class ProfilesViewModel : MyReactiveObject
         }
     }
 
-    public async Task ShareServerAsync()
-    {
-        var item = await AppManager.Instance.GetProfileItem(SelectedProfile.IndexId);
-        if (item is null)
-        {
-            NoticeManager.Instance.Enqueue(ResUI.PleaseSelectServer);
-            return;
-        }
-        var url = FmtHandler.GetShareUri(item);
-        if (url.IsNullOrEmpty())
-        {
-            return;
-        }
-
-        await _updateView?.Invoke(EViewAction.ShareServer, url);
-    }
-
-    private async Task GenGroupMultipleServer(ECoreType coreType, EMultipleLoad multipleLoad)
-    {
-        var lstSelected = await GetProfileItems(true);
-        if (lstSelected == null)
-        {
-            return;
-        }
-
-        var ret = await ConfigHandler.AddGroupServer4Multiple(_config, lstSelected, coreType, multipleLoad, SelectedSub?.Id);
-        if (ret.Success != true)
-        {
-            NoticeManager.Instance.Enqueue(ResUI.OperationFailed);
-            return;
-        }
-        if (ret?.Data?.ToString() == _config.IndexId)
-        {
-            await RefreshServers();
-            Reload();
-        }
-        else
-        {
-            await SetDefaultServer(ret?.Data?.ToString());
-        }
-    }
-
     public async Task SortServer(string colName)
     {
         if (colName.IsNullOrEmpty())
@@ -696,67 +409,6 @@ public class ProfilesViewModel : MyReactiveObject
         }
         _dicHeaderSort[colName] = !asc;
         await RefreshServers();
-    }
-
-    public async Task RemoveInvalidServerResult()
-    {
-        var count = await ConfigHandler.RemoveInvalidServerResult(_config, _config.SubIndexId);
-        await RefreshServers();
-        NoticeManager.Instance.Enqueue(string.Format(ResUI.RemoveInvalidServerResultTip, count));
-    }
-
-    //move server
-    private async Task MoveToGroup(bool c)
-    {
-        if (!c)
-        {
-            return;
-        }
-
-        var lstSelected = await GetProfileItems(true);
-        if (lstSelected == null)
-        {
-            return;
-        }
-
-        await ConfigHandler.MoveToGroup(_config, lstSelected, SelectedMoveToGroup.Id);
-        NoticeManager.Instance.Enqueue(ResUI.OperationSuccess);
-
-        await RefreshServers();
-        SelectedMoveToGroup = null;
-        SelectedMoveToGroup = new();
-    }
-
-    public async Task MoveServer(EMove eMove)
-    {
-        var item = _lstProfile.FirstOrDefault(t => t.IndexId == SelectedProfile.IndexId);
-        if (item is null)
-        {
-            NoticeManager.Instance.Enqueue(ResUI.PleaseSelectServer);
-            return;
-        }
-
-        var index = _lstProfile.IndexOf(item);
-        if (index < 0)
-        {
-            return;
-        }
-        if (await ConfigHandler.MoveServer(_config, _lstProfile, index, eMove) == 0)
-        {
-            await RefreshServers();
-        }
-    }
-
-    public async Task MoveServerTo(int startIndex, ProfileItemModel targetItem)
-    {
-        var targetIndex = ProfileItems.IndexOf(targetItem);
-        if (startIndex >= 0 && targetIndex >= 0 && startIndex != targetIndex)
-        {
-            if (await ConfigHandler.MoveServer(_config, _lstProfile, startIndex, EMove.Position, targetIndex) == 0)
-            {
-                await RefreshServers();
-            }
-        }
     }
 
     public async Task ServerSpeedtest(ESpeedActionType actionType)
@@ -794,195 +446,5 @@ public class ProfilesViewModel : MyReactiveObject
         _speedtestService?.ExitLoop();
     }
 
-    private async Task Export2ClientConfigAsync(bool blClipboard)
-    {
-        var item = await AppManager.Instance.GetProfileItem(SelectedProfile.IndexId);
-        if (item is null)
-        {
-            NoticeManager.Instance.Enqueue(ResUI.PleaseSelectServer);
-            return;
-        }
-
-        var msgs = await ActionPrecheckManager.Instance.Check(item);
-        if (msgs.Count > 0)
-        {
-            foreach (var msg in msgs)
-            {
-                NoticeManager.Instance.SendMessage(msg);
-            }
-            NoticeManager.Instance.Enqueue(Utils.List2String(msgs.Take(10).ToList(), true));
-            return;
-        }
-
-        if (blClipboard)
-        {
-            var result = await CoreConfigHandler.GenerateClientConfig(item, null);
-            if (result.Success != true)
-            {
-                NoticeManager.Instance.Enqueue(result.Msg);
-            }
-            else
-            {
-                await _updateView?.Invoke(EViewAction.SetClipboardData, result.Data);
-                NoticeManager.Instance.SendMessage(ResUI.OperationSuccess);
-            }
-        }
-        else
-        {
-            await _updateView?.Invoke(EViewAction.SaveFileDialog, item);
-        }
-    }
-
-    public async Task Export2ClientConfigResult(string fileName, ProfileItem item)
-    {
-        if (fileName.IsNullOrEmpty())
-        {
-            return;
-        }
-        var result = await CoreConfigHandler.GenerateClientConfig(item, fileName);
-        if (result.Success != true)
-        {
-            NoticeManager.Instance.Enqueue(result.Msg);
-        }
-        else
-        {
-            NoticeManager.Instance.SendMessageAndEnqueue(string.Format(ResUI.SaveClientConfigurationIn, fileName));
-        }
-    }
-
-    public async Task Export2ShareUrlAsync(bool blEncode)
-    {
-        var lstSelected = await GetProfileItems(true);
-        if (lstSelected == null)
-        {
-            return;
-        }
-
-        StringBuilder sb = new();
-        foreach (var it in lstSelected)
-        {
-            var url = FmtHandler.GetShareUri(it);
-            if (url.IsNullOrEmpty())
-            {
-                continue;
-            }
-            sb.Append(url);
-            sb.AppendLine();
-        }
-        if (sb.Length > 0)
-        {
-            if (blEncode)
-            {
-                await _updateView?.Invoke(EViewAction.SetClipboardData, Utils.Base64Encode(sb.ToString()));
-            }
-            else
-            {
-                await _updateView?.Invoke(EViewAction.SetClipboardData, sb.ToString());
-            }
-            NoticeManager.Instance.SendMessage(ResUI.BatchExportURLSuccessfully);
-        }
-    }
-
     #endregion Add Servers
-
-    #region Subscription
-
-    private async Task EditSubAsync(bool blNew)
-    {
-        SubItem item;
-        if (blNew)
-        {
-            item = new();
-        }
-        else
-        {
-            item = await AppManager.Instance.GetSubItem(_config.SubIndexId);
-            if (item is null)
-            {
-                return;
-            }
-        }
-        if (await _updateView?.Invoke(EViewAction.SubEditWindow, item) == true)
-        {
-            await RefreshSubscriptions();
-            await SubSelectedChangedAsync(true);
-        }
-    }
-
-    private async Task DeleteSubAsync()
-    {
-        var item = await AppManager.Instance.GetSubItem(_config.SubIndexId);
-        if (item is null)
-        {
-            return;
-        }
-
-        if (await _updateView?.Invoke(EViewAction.ShowYesNo, null) == false)
-        {
-            return;
-        }
-        await ConfigHandler.DeleteSubItem(_config, item.Id);
-
-        await RefreshSubscriptions();
-        await SubSelectedChangedAsync(true);
-    }
-
-    private async Task ExportSubAsync()
-    {
-        var item = await AppManager.Instance.GetSubItem(_config.SubIndexId);
-        if (item is null)
-        {
-            return;
-        }
-
-        try
-        {
-            // Get all servers for this subscription
-            var profileItems = await AppManager.Instance.ProfileItems(_config.SubIndexId);
-            var servers = profileItems.ToList();
-            if (servers.Count == 0)
-            {
-                NoticeManager.Instance.Enqueue("订阅分组下无节点");
-                return;
-            }
-
-            // Generate subscription content
-            StringBuilder sb = new();
-            foreach (var server in servers)
-            {
-                var url = FmtHandler.GetShareUri(server);
-                if (url.IsNullOrEmpty())
-                {
-                    continue;
-                }
-                sb.Append(url);
-                sb.AppendLine();
-            }
-            if (sb.Length == 0)
-            {
-                NoticeManager.Instance.Enqueue("生成分享链接失败");
-                return;
-            }
-
-            // Base64 encode
-            var content = Utils.Base64Encode(sb.ToString());
-
-            // Create export directory
-            var exportDir = Path.Combine(Utils.StartupPath(), "guiNodes");
-            Directory.CreateDirectory(exportDir);
-
-            // Save to file
-            var fileName = Path.Combine(exportDir, item.Remarks);
-            await File.WriteAllTextAsync(fileName, content);
-
-            NoticeManager.Instance.SendMessageAndEnqueue($"导出节点信息成功: {fileName}");
-        }
-        catch (Exception ex)
-        {
-            Logging.SaveLog("ExportSubAsync", ex);
-            NoticeManager.Instance.Enqueue($"导出节点信息失败: {ex.Message}");
-        }
-    }
-
-    #endregion Subscription
 }

@@ -1929,6 +1929,11 @@ public static class ConfigHandler
     /// <returns>0 if successful</returns>
     public static async Task<int> SetDefaultRouting(Config config, RoutingItem routingItem)
     {
+        if (routingItem == null)
+        {
+            return -1;
+        }
+
         var items = await AppManager.Instance.RoutingItems();
         if (items.Any(t => t.Id == routingItem.Id && t.IsActive == true))
         {
@@ -1964,7 +1969,16 @@ public static class ConfigHandler
         if (item is null)
         {
             var item2 = await SQLiteHelper.Instance.TableAsync<RoutingItem>().FirstOrDefaultAsync();
-            await SetDefaultRouting(config, item2);
+            if (item2 is null)
+            {
+                // No routing items exist, initialize built-in routing rules
+                await InitBuiltinRouting(config);
+                item2 = await SQLiteHelper.Instance.TableAsync<RoutingItem>().FirstOrDefaultAsync();
+            }
+            if (item2 is not null)
+            {
+                await SetDefaultRouting(config, item2);
+            }
             return item2;
         }
 

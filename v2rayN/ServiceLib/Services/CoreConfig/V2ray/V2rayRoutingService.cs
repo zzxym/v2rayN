@@ -11,27 +11,37 @@ public partial class CoreConfigV2rayService
                 v2rayConfig.routing.domainStrategy = _config.RoutingBasicItem.DomainStrategy;
 
                 var routing = await ConfigHandler.GetDefaultRouting(_config);
-                if (routing != null)
+                if (routing != null && routing.RuleSet.IsNotEmpty())
                 {
                     if (routing.DomainStrategy.IsNotEmpty())
                     {
                         v2rayConfig.routing.domainStrategy = routing.DomainStrategy;
                     }
-                    var rules = JsonUtils.Deserialize<List<RulesItem>>(routing.RuleSet);
-                    foreach (var item in rules)
+                    try
                     {
-                        if (!item.Enabled)
+                        var rules = JsonUtils.Deserialize<List<RulesItem>>(routing.RuleSet);
+                        if (rules != null)
                         {
-                            continue;
-                        }
+                            foreach (var item in rules)
+                            {
+                                if (!item.Enabled)
+                                {
+                                    continue;
+                                }
 
-                        if (item.RuleType == ERuleType.DNS)
-                        {
-                            continue;
-                        }
+                                if (item.RuleType == ERuleType.DNS)
+                                {
+                                    continue;
+                                }
 
-                        var item2 = JsonUtils.Deserialize<RulesItem4Ray>(JsonUtils.Serialize(item));
-                        await GenRoutingUserRule(item2, v2rayConfig);
+                                var item2 = JsonUtils.Deserialize<RulesItem4Ray>(JsonUtils.Serialize(item));
+                                await GenRoutingUserRule(item2, v2rayConfig);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logging.SaveLog(_tag, ex);
                     }
                 }
             }

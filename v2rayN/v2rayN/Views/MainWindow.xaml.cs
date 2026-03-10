@@ -8,8 +8,6 @@ namespace v2rayN.Views;
 public partial class MainWindow
 {
     private static Config _config;
-    private CheckUpdateView? _checkUpdateView;
-    private BackupAndRestoreView? _backupAndRestoreView;
 
     public MainWindow()
     {
@@ -21,11 +19,7 @@ public partial class MainWindow
         App.Current.SessionEnding += Current_SessionEnding;
         Closing += MainWindow_Closing;
         PreviewKeyDown += MainWindow_PreviewKeyDown;
-        menuSettingsSetUWP.Click += MenuSettingsSetUWP_Click;
-        menuPromotion.Click += MenuPromotion_Click;
         menuClose.Click += MenuClose_Click;
-        menuCheckUpdate.Click += MenuCheckUpdate_Click;
-        menuBackupAndRestore.Click += MenuBackupAndRestore_Click;
 
         ViewModel = new MainWindowViewModel(UpdateViewHandler);
 
@@ -60,44 +54,6 @@ public partial class MainWindow
 
         this.WhenActivated(disposables =>
         {
-            //servers
-            this.BindCommand(ViewModel, vm => vm.AddVmessServerCmd, v => v.menuAddVmessServer).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.AddVlessServerCmd, v => v.menuAddVlessServer).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.AddShadowsocksServerCmd, v => v.menuAddShadowsocksServer).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.AddSocksServerCmd, v => v.menuAddSocksServer).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.AddHttpServerCmd, v => v.menuAddHttpServer).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.AddTrojanServerCmd, v => v.menuAddTrojanServer).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.AddHysteria2ServerCmd, v => v.menuAddHysteria2Server).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.AddTuicServerCmd, v => v.menuAddTuicServer).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.AddWireguardServerCmd, v => v.menuAddWireguardServer).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.AddAnytlsServerCmd, v => v.menuAddAnytlsServer).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.AddCustomServerCmd, v => v.menuAddCustomServer).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.AddPolicyGroupServerCmd, v => v.menuAddPolicyGroupServer).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.AddProxyChainServerCmd, v => v.menuAddProxyChainServer).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.AddServerViaClipboardCmd, v => v.menuAddServerViaClipboard).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.AddServerViaScanCmd, v => v.menuAddServerViaScan).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.AddServerViaImageCmd, v => v.menuAddServerViaImage).DisposeWith(disposables);
-
-            //sub
-            this.BindCommand(ViewModel, vm => vm.SubSettingCmd, v => v.menuSubSetting).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.SubUpdateCmd, v => v.menuSubUpdate).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.SubUpdateViaProxyCmd, v => v.menuSubUpdateViaProxy).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.SubGroupUpdateCmd, v => v.menuSubGroupUpdate).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.SubGroupUpdateViaProxyCmd, v => v.menuSubGroupUpdateViaProxy).DisposeWith(disposables);
-
-            //setting
-            this.BindCommand(ViewModel, vm => vm.OptionSettingCmd, v => v.menuOptionSetting).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.RoutingSettingCmd, v => v.menuRoutingSetting).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.DNSSettingCmd, v => v.menuDNSSetting).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.FullConfigTemplateCmd, v => v.menuFullConfigTemplate).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.GlobalHotkeySettingCmd, v => v.menuGlobalHotkeySetting).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.RebootAsAdminCmd, v => v.menuRebootAsAdmin).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.ClearServerStatisticsCmd, v => v.menuClearServerStatistics).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.OpenTheFileLocationCmd, v => v.menuOpenTheFileLocation).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.RegionalPresetDefaultCmd, v => v.menuRegionalPresetsDefault).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.RegionalPresetRussiaCmd, v => v.menuRegionalPresetsRussia).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.RegionalPresetIranCmd, v => v.menuRegionalPresetsIran).DisposeWith(disposables);
-
             this.BindCommand(ViewModel, vm => vm.ReloadCmd, v => v.menuReload).DisposeWith(disposables);
             this.OneWayBind(ViewModel, vm => vm.BlReloadEnabled, v => v.menuReload.IsEnabled).DisposeWith(disposables);
 
@@ -161,7 +117,6 @@ public partial class MainWindow
             RenderOptions.ProcessRenderMode = RenderMode.SoftwareOnly;
         }
 
-        AddHelpMenuItem();
         WindowsManager.Instance.RegisterGlobalHotkey(_config, OnHotkeyHandler, null);
     }
 
@@ -183,63 +138,6 @@ public partial class MainWindow
 
     private async Task<bool> UpdateViewHandler(EViewAction action, object? obj)
     {
-        switch (action)
-        {
-            case EViewAction.AddServerWindow:
-                if (obj is null)
-                {
-                    return false;
-                }
-
-                return new AddServerWindow((ProfileItem)obj).ShowDialog() ?? false;
-
-            case EViewAction.AddServer2Window:
-                if (obj is null)
-                {
-                    return false;
-                }
-
-                return new AddServer2Window((ProfileItem)obj).ShowDialog() ?? false;
-
-            case EViewAction.AddGroupServerWindow:
-                if (obj is null)
-                {
-                    return false;
-                }
-
-                return new AddGroupServerWindow((ProfileItem)obj).ShowDialog() ?? false;
-
-            case EViewAction.DNSSettingWindow:
-                return new DNSSettingWindow().ShowDialog() ?? false;
-
-            case EViewAction.RoutingSettingWindow:
-                return new RoutingSettingWindow().ShowDialog() ?? false;
-
-            case EViewAction.OptionSettingWindow:
-                return new OptionSettingWindow().ShowDialog() ?? false;
-
-            case EViewAction.FullConfigTemplateWindow:
-                return new FullConfigTemplateWindow().ShowDialog() ?? false;
-
-            case EViewAction.GlobalHotkeySettingWindow:
-                return new GlobalHotkeySettingWindow().ShowDialog() ?? false;
-
-            case EViewAction.SubSettingWindow:
-                return new SubSettingWindow().ShowDialog() ?? false;
-
-            case EViewAction.ScanScreenTask:
-                await ScanScreenTaskAsync();
-                break;
-
-            case EViewAction.ScanImageTask:
-                await ScanImageTaskAsync();
-                break;
-
-            case EViewAction.AddServerViaClipboard:
-                await AddServerViaClipboardAsync();
-                break;
-        }
-
         return await Task.FromResult(true);
     }
 
@@ -280,30 +178,9 @@ public partial class MainWindow
 
     private void MainWindow_PreviewKeyDown(object sender, KeyEventArgs e)
     {
-        if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
+        if (e.Key == Key.F5)
         {
-            switch (e.Key)
-            {
-                case Key.V:
-                    if (Keyboard.FocusedElement is TextBox)
-                    {
-                        return;
-                    }
-                    AddServerViaClipboardAsync().ContinueWith(_ => { });
-
-                    break;
-
-                case Key.S:
-                    ScanScreenTaskAsync().ContinueWith(_ => { });
-                    break;
-            }
-        }
-        else
-        {
-            if (e.Key == Key.F5)
-            {
-                ViewModel?.Reload();
-            }
+            ViewModel?.Reload();
         }
     }
 
@@ -311,63 +188,6 @@ public partial class MainWindow
     {
         StorageUI();
         ShowHideWindow(false);
-    }
-
-    private void MenuPromotion_Click(object sender, RoutedEventArgs e)
-    {
-        ProcUtils.ProcessStart($"{Utils.Base64Decode(Global.PromotionUrl)}?t={DateTime.Now.Ticks}");
-    }
-
-    private void MenuSettingsSetUWP_Click(object sender, RoutedEventArgs e)
-    {
-        ProcUtils.ProcessStart(Utils.GetBinPath("EnableLoopback.exe"));
-    }
-
-    public async Task AddServerViaClipboardAsync()
-    {
-        var clipboardData = WindowsUtils.GetClipboardData();
-        if (clipboardData.IsNotEmpty() && ViewModel != null)
-        {
-            await ViewModel.AddServerViaClipboardAsync(clipboardData);
-        }
-    }
-
-    private async Task ScanScreenTaskAsync()
-    {
-        ShowHideWindow(false);
-
-        if (Application.Current?.MainWindow is Window window)
-        {
-            var bytes = QRCodeWindowsUtils.CaptureScreen(window);
-            await ViewModel?.ScanScreenResult(bytes);
-        }
-
-        ShowHideWindow(true);
-    }
-
-    private async Task ScanImageTaskAsync()
-    {
-        if (UI.OpenFileDialog(out var fileName, "PNG|*.png|All|*.*") != true)
-        {
-            return;
-        }
-        if (fileName.IsNullOrEmpty())
-        {
-            return;
-        }
-        await ViewModel?.ScanImageResult(fileName);
-    }
-
-    private void MenuCheckUpdate_Click(object sender, RoutedEventArgs e)
-    {
-        _checkUpdateView ??= new CheckUpdateView();
-        DialogHost.Show(_checkUpdateView, "RootDialog");
-    }
-
-    private void MenuBackupAndRestore_Click(object sender, RoutedEventArgs e)
-    {
-        _backupAndRestoreView ??= new BackupAndRestoreView();
-        DialogHost.Show(_backupAndRestoreView, "RootDialog");
     }
 
     #endregion Event
@@ -432,31 +252,6 @@ public partial class MainWindow
         else if (_config.UiItem.MainGirdOrientation == EGirdOrientation.Vertical)
         {
             ConfigHandler.SaveMainGirdHeight(_config, gridMain1.RowDefinitions[0].ActualHeight, gridMain1.RowDefinitions[2].ActualHeight);
-        }
-    }
-
-    private void AddHelpMenuItem()
-    {
-        var coreInfo = CoreInfoManager.Instance.GetCoreInfo();
-        foreach (var it in coreInfo
-            .Where(t => t.CoreType is not ECoreType.v2fly
-                        and not ECoreType.hysteria))
-        {
-            var item = new MenuItem()
-            {
-                Tag = it.Url.Replace(@"/releases", ""),
-                Header = string.Format(ResUI.menuWebsiteItem, it.CoreType.ToString().Replace("_", " ")).UpperFirstChar()
-            };
-            item.Click += MenuItem_Click;
-            menuHelp.Items.Add(item);
-        }
-    }
-
-    private void MenuItem_Click(object sender, RoutedEventArgs e)
-    {
-        if (sender is MenuItem item)
-        {
-            ProcUtils.ProcessStart(item.Tag.ToString());
         }
     }
 

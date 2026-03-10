@@ -1,5 +1,4 @@
 using Avalonia.Controls.Notifications;
-using DialogHostAvalonia;
 using v2rayN.Desktop.Base;
 using v2rayN.Desktop.Common;
 using v2rayN.Desktop.Manager;
@@ -11,8 +10,6 @@ public partial class MainWindow : WindowBase<MainWindowViewModel>
 {
     private static Config _config;
     private readonly WindowNotificationManager? _manager;
-    private CheckUpdateView? _checkUpdateView;
-    private BackupAndRestoreView? _backupAndRestoreView;
     private bool _blCloseByUser = false;
 
     public MainWindow()
@@ -23,13 +20,9 @@ public partial class MainWindow : WindowBase<MainWindowViewModel>
         _manager = new WindowNotificationManager(TopLevel.GetTopLevel(this)) { MaxItems = 3, Position = NotificationPosition.TopRight };
 
         KeyDown += MainWindow_KeyDown;
-        menuSettingsSetUWP.Click += MenuSettingsSetUWP_Click;
-        menuCheckUpdate.Click += MenuCheckUpdate_Click;
-        menuBackupAndRestore.Click += MenuBackupAndRestore_Click;
-        menuSubscriptionMaintenance.Click += MenuSubscriptionMaintenance_Click;
         menuClose.Click += MenuClose_Click;
 
-        ViewModel = new MainWindowViewModel(UpdateViewHandler);
+        ViewModel = new MainWindowViewModel(null);
 
         switch (_config.UiItem.MainGirdOrientation)
         {
@@ -58,48 +51,9 @@ public partial class MainWindow : WindowBase<MainWindowViewModel>
                 gridMain2.IsVisible = true;
                 break;
         }
-        conTheme.Content ??= new ThemeSettingView();
 
         this.WhenActivated(disposables =>
         {
-            //servers
-            this.BindCommand(ViewModel, vm => vm.AddVmessServerCmd, v => v.menuAddVmessServer).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.AddVlessServerCmd, v => v.menuAddVlessServer).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.AddShadowsocksServerCmd, v => v.menuAddShadowsocksServer).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.AddSocksServerCmd, v => v.menuAddSocksServer).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.AddHttpServerCmd, v => v.menuAddHttpServer).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.AddTrojanServerCmd, v => v.menuAddTrojanServer).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.AddHysteria2ServerCmd, v => v.menuAddHysteria2Server).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.AddTuicServerCmd, v => v.menuAddTuicServer).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.AddWireguardServerCmd, v => v.menuAddWireguardServer).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.AddAnytlsServerCmd, v => v.menuAddAnytlsServer).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.AddCustomServerCmd, v => v.menuAddCustomServer).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.AddPolicyGroupServerCmd, v => v.menuAddPolicyGroupServer).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.AddProxyChainServerCmd, v => v.menuAddProxyChainServer).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.AddServerViaClipboardCmd, v => v.menuAddServerViaClipboard).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.AddServerViaScanCmd, v => v.menuAddServerViaScan).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.AddServerViaImageCmd, v => v.menuAddServerViaImage).DisposeWith(disposables);
-
-            //sub
-            this.BindCommand(ViewModel, vm => vm.SubSettingCmd, v => v.menuSubSetting).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.SubUpdateCmd, v => v.menuSubUpdate).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.SubUpdateViaProxyCmd, v => v.menuSubUpdateViaProxy).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.SubGroupUpdateCmd, v => v.menuSubGroupUpdate).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.SubGroupUpdateViaProxyCmd, v => v.menuSubGroupUpdateViaProxy).DisposeWith(disposables);
-
-            //setting
-            this.BindCommand(ViewModel, vm => vm.OptionSettingCmd, v => v.menuOptionSetting).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.RoutingSettingCmd, v => v.menuRoutingSetting).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.DNSSettingCmd, v => v.menuDNSSetting).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.FullConfigTemplateCmd, v => v.menuFullConfigTemplate).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.GlobalHotkeySettingCmd, v => v.menuGlobalHotkeySetting).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.RebootAsAdminCmd, v => v.menuRebootAsAdmin).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.ClearServerStatisticsCmd, v => v.menuClearServerStatistics).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.OpenTheFileLocationCmd, v => v.menuOpenTheFileLocation).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.RegionalPresetDefaultCmd, v => v.menuRegionalPresetsDefault).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.RegionalPresetRussiaCmd, v => v.menuRegionalPresetsRussia).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.RegionalPresetIranCmd, v => v.menuRegionalPresetsIran).DisposeWith(disposables);
-
             this.BindCommand(ViewModel, vm => vm.ReloadCmd, v => v.menuReload).DisposeWith(disposables);
             this.OneWayBind(ViewModel, vm => vm.BlReloadEnabled, v => v.menuReload.IsEnabled).DisposeWith(disposables);
 
@@ -163,14 +117,11 @@ public partial class MainWindow : WindowBase<MainWindowViewModel>
         {
             Title = "v2rayN二开维护版";
         }
-        menuAddServerViaScan.IsVisible = false;
 
         if (_config.UiItem.AutoHideStartup && Utils.IsWindows())
         {
             WindowState = WindowState.Minimized;
         }
-
-        AddHelpMenuItem();
     }
 
     #region Event
@@ -188,67 +139,7 @@ public partial class MainWindow : WindowBase<MainWindowViewModel>
         await Task.CompletedTask;
     }
 
-    private async Task<bool> UpdateViewHandler(EViewAction action, object? obj)
-    {
-        switch (action)
-        {
-            case EViewAction.AddServerWindow:
-                if (obj is null)
-                {
-                    return false;
-                }
 
-                return await new AddServerWindow((ProfileItem)obj).ShowDialog<bool>(this);
-
-            case EViewAction.AddServer2Window:
-                if (obj is null)
-                {
-                    return false;
-                }
-
-                return await new AddServer2Window((ProfileItem)obj).ShowDialog<bool>(this);
-
-            case EViewAction.AddGroupServerWindow:
-                if (obj is null)
-                {
-                    return false;
-                }
-
-                return await new AddGroupServerWindow((ProfileItem)obj).ShowDialog<bool>(this);
-
-            case EViewAction.DNSSettingWindow:
-                return await new DNSSettingWindow().ShowDialog<bool>(this);
-
-            case EViewAction.FullConfigTemplateWindow:
-                return await new FullConfigTemplateWindow().ShowDialog<bool>(this);
-
-            case EViewAction.RoutingSettingWindow:
-                return await new RoutingSettingWindow().ShowDialog<bool>(this);
-
-            case EViewAction.OptionSettingWindow:
-                return await new OptionSettingWindow().ShowDialog<bool>(this);
-
-            case EViewAction.GlobalHotkeySettingWindow:
-                return await new GlobalHotkeySettingWindow().ShowDialog<bool>(this);
-
-            case EViewAction.SubSettingWindow:
-                return await new SubSettingWindow().ShowDialog<bool>(this);
-
-            case EViewAction.ScanScreenTask:
-                await ScanScreenTaskAsync();
-                break;
-
-            case EViewAction.ScanImageTask:
-                await ScanImageTaskAsync();
-                break;
-
-            case EViewAction.AddServerViaClipboard:
-                await AddServerViaClipboardAsync();
-                break;
-        }
-
-        return await Task.FromResult(true);
-    }
 
     private void OnHotkeyHandler(EGlobalHotkey e)
     {
@@ -293,90 +184,27 @@ public partial class MainWindow : WindowBase<MainWindowViewModel>
 
     private async void MainWindow_KeyDown(object? sender, KeyEventArgs e)
     {
-        if (e.KeyModifiers is KeyModifiers.Control or KeyModifiers.Meta)
+        if (e.Key == Key.F5)
         {
-            switch (e.Key)
-            {
-                case Key.V:
-                    await AddServerViaClipboardAsync();
-                    break;
-
-                case Key.S:
-                    await ScanScreenTaskAsync();
-                    break;
-            }
-        }
-        else
-        {
-            if (e.Key == Key.F5)
-            {
-                ViewModel?.Reload();
-            }
+            ViewModel?.Reload();
         }
     }
 
     
 
-    private void MenuSettingsSetUWP_Click(object? sender, RoutedEventArgs e)
-    {
-        ProcUtils.ProcessStart(Utils.GetBinPath("EnableLoopback.exe"));
-    }
 
-    private void MenuSubscriptionMaintenance_Click(object? sender, RoutedEventArgs e)
-    {
-        var subscriptionMaintenanceView = new SubscriptionMaintenanceView();
-        DialogHost.Show(subscriptionMaintenanceView);
-    }
 
-    public async Task AddServerViaClipboardAsync()
-    {
-        var clipboardData = await AvaUtils.GetClipboardData(this);
-        if (clipboardData.IsNotEmpty() && ViewModel != null)
-        {
-            await ViewModel.AddServerViaClipboardAsync(clipboardData);
-        }
-    }
 
-    public async Task ScanScreenTaskAsync()
-    {
-        //ShowHideWindow(false);
 
-        NoticeManager.Instance.SendMessageAndEnqueue("Not yet implemented.(还未实现)");
-        await Task.CompletedTask;
-        //if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-        //{
-        //    //var bytes = QRCodeHelper.CaptureScreen(desktop);
-        //    //await ViewModel?.ScanScreenResult(bytes);
-        //}
 
-        //ShowHideWindow(true);
-    }
 
-    private async Task ScanImageTaskAsync()
-    {
-        var fileName = await UI.OpenFileDialog(this, null);
-        if (fileName.IsNullOrEmpty())
-        {
-            return;
-        }
 
-        if (ViewModel != null)
-        {
-            await ViewModel.ScanImageResult(fileName);
-        }
-    }
 
-    private void MenuCheckUpdate_Click(object? sender, RoutedEventArgs e)
-    {
-        _checkUpdateView ??= new CheckUpdateView();
-        DialogHost.Show(_checkUpdateView);
-    }
 
-    private void MenuBackupAndRestore_Click(object? sender, RoutedEventArgs e)
-    {
-        _backupAndRestoreView ??= new BackupAndRestoreView(this);
-        DialogHost.Show(_backupAndRestoreView);
-    }
+
+
+
+
 
     private async void MenuClose_Click(object? sender, RoutedEventArgs e)
     {
@@ -484,30 +312,7 @@ public partial class MainWindow : WindowBase<MainWindowViewModel>
         }
     }
 
-    private void AddHelpMenuItem()
-    {
-        var coreInfo = CoreInfoManager.Instance.GetCoreInfo();
-        foreach (var it in coreInfo
-            .Where(t => t.CoreType is not ECoreType.v2fly
-                        and not ECoreType.hysteria))
-        {
-            var item = new MenuItem()
-            {
-                Tag = it.Url?.Replace(@"/releases", ""),
-                Header = string.Format(ResUI.menuWebsiteItem, it.CoreType.ToString().Replace("_", " ")).UpperFirstChar()
-            };
-            item.Click += MenuItem_Click;
-            menuHelp.Items.Add(item);
-        }
-    }
 
-    private void MenuItem_Click(object? sender, RoutedEventArgs e)
-    {
-        if (sender is MenuItem item)
-        {
-            ProcUtils.ProcessStart(item.Tag?.ToString());
-        }
-    }
 
     #endregion UI
 }

@@ -83,6 +83,10 @@ public class MainWindowViewModel : MyReactiveObject
         }
         await RefreshServers();
 
+        // 触发订阅和路由菜单刷新
+        AppEvents.SubscriptionsRefreshRequested.Publish();
+        AppEvents.RoutingsMenuRefreshRequested.Publish();
+
         await Reload();
     }
 

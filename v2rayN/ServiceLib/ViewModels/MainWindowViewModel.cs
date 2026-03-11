@@ -62,7 +62,65 @@ public class MainWindowViewModel : MyReactiveObject
 
         #endregion AppEvents
 
+        // 在构造函数中同步创建默认订阅分组
+        Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(1000); // 等待数据库初始化完成
+                await EnsureDefaultSubscriptionExists();
+            }
+            catch (Exception ex)
+            {
+                Logging.SaveLog("构造函数中创建订阅分组异常: " + ex.Message);
+            }
+        });
+
         _ = Init();
+    }
+
+    private async Task EnsureDefaultSubscriptionExists()
+    {
+        Logging.SaveLog("EnsureDefaultSubscriptionExists() 开始执行...");
+        
+        // 检查是否已存在'用户体验'订阅分组
+        var subscriptions = await AppManager.Instance.SubItems();
+        var existingSub = subscriptions?.FirstOrDefault(s => s.Remarks == "用户体验");
+        
+        if (existingSub == null)
+        {
+            Logging.SaveLog("未找到'用户体验'订阅分组，准备创建...");
+            
+            // 创建新的订阅分组
+            var subItem = new SubItem
+            {
+                Id = Utils.GetGuid(false),
+                Remarks = "用户体验",
+                Url = "https://rss.xiaolin.cc/test",
+                Enabled = true,
+                AutoUpdateInterval = 1, // 1分钟自动更新
+                UpdateTime = 0
+            };
+            
+            var result = await ConfigHandler.AddSubItem(_config, subItem);
+            Logging.SaveLog($"创建订阅分组结果: {result}, ID: {subItem.Id}");
+            
+            if (result == 0)
+            {
+                Logging.SaveLog("已创建默认订阅分组: 用户体验");
+                
+                // 触发订阅刷新
+                AppEvents.SubscriptionsRefreshRequested.Publish();
+            }
+            else
+            {
+                Logging.SaveLog("创建订阅分组失败");
+            }
+        }
+        else
+        {
+            Logging.SaveLog($"找到已存在的订阅分组: {existingSub.Id}");
+        }
     }
 
     private async Task Init()

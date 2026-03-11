@@ -425,6 +425,22 @@ public class MainWindowViewModel : MyReactiveObject
     public async Task UpdateSubscriptionProcess(string subId, bool blProxy)
     {
         await Task.Run(async () => await SubscriptionHandler.UpdateProcess(_config, subId, blProxy, UpdateTaskHandler));
+        
+        // 订阅更新完成后，重新创建策略组
+        var subItem = await AppManager.Instance.GetSubItem(subId);
+        if (subItem == null)
+        {
+            // 如果subId为空（更新全部订阅），获取"用户体验"订阅分组
+            var subscriptions = await AppManager.Instance.SubItems();
+            subItem = subscriptions?.FirstOrDefault(s => s.Remarks == "用户体验");
+        }
+        
+        if (subItem != null)
+        {
+            await InitDefaultPolicyGroup(subItem);
+            // 刷新服务器列表显示
+            AppEvents.ProfilesRefreshRequested.Publish();
+        }
     }
 
     #endregion Subscription

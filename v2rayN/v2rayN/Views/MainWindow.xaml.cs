@@ -187,8 +187,19 @@ public partial class MainWindow
 
     private void MenuClose_Click(object sender, RoutedEventArgs e)
     {
-        StorageUI();
-        ShowHideWindow(false);
+        var result = UI.ShowYesNo("您想要退出软件还是最小化到任务栏？\n\n是 - 退出软件\n否 - 最小化到任务栏");
+        if (result == MessageBoxResult.Yes)
+        {
+            // 退出软件
+            StorageUI();
+            Application.Current.Shutdown();
+        }
+        else
+        {
+            // 最小化到任务栏
+            StorageUI();
+            ShowHideWindow(false);
+        }
     }
 
     #endregion Event

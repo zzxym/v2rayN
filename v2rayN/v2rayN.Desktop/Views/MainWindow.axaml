@@ -26,6 +26,7 @@
                 <ContentControl x:Name="conTheme" DockPanel.Dock="Right" />
                 <Menu Margin="{StaticResource Margin4}">
                     <MenuItem x:Name="menuReload" Header="{x:Static resx:ResUI.menuReload}" />
+                    <MenuItem x:Name="menuUpdateSub" Header="拉取服务器" Command="{Binding ManualUpdateSubCmd}" />
                     <MenuItem x:Name="menuClose" Header="{x:Static resx:ResUI.menuExit}" />
                 </Menu>
             </DockPanel>

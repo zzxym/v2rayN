@@ -16,6 +16,7 @@ public class MainWindowViewModel : MyReactiveObject
     #region Menu
 
     public ReactiveCommand<Unit, Unit> ReloadCmd { get; }
+    public ReactiveCommand<Unit, Unit> ManualUpdateSubCmd { get; }
 
     [Reactive]
     public bool BlReloadEnabled { get; set; }
@@ -43,6 +44,12 @@ public class MainWindowViewModel : MyReactiveObject
         ReloadCmd = ReactiveCommand.CreateFromTask(async () =>
         {
             await Reload();
+        });
+
+        ManualUpdateSubCmd = ReactiveCommand.CreateFromTask(async () =>
+        {
+            AppEvents.SubscriptionsUpdateRequested.Publish(false);
+            await Task.Delay(1000);
         });
 
         #endregion WhenAnyValue && ReactiveCommand

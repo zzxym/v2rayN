@@ -2264,6 +2264,12 @@ public static class ConfigHandler
         routingItem.RuleNum = rules.Count;
         routingItem.RuleSet = JsonUtils.Serialize(rules, false);
         routingItem.Enabled = true;
+        
+        // 确保Id已设置
+        if (routingItem.Id.IsNullOrEmpty())
+        {
+            routingItem.Id = Utils.GetGuid(false);
+        }
 
         await SQLiteHelper.Instance.InsertAsync(routingItem);
     }

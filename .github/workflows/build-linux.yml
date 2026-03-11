@@ -31,13 +31,13 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v6.0.2
+      uses: actions/checkout@v4
       with:
         submodules: 'recursive'
         fetch-depth: '0'
 
     - name: Setup .NET
-      uses: actions/setup-dotnet@v5.0.1
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '8.0.x'
 
@@ -50,7 +50,7 @@ jobs:
         dotnet publish ./AmazTool/AmazTool.csproj             -c Release -r linux-arm64 -p:SelfContained=true -p:PublishTrimmed=true -o "$OutputPathArm64"
 
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v6.0.0
+      uses: actions/upload-artifact@v4
       with:
         name: v2rayN-linux
         path: |
@@ -165,13 +165,13 @@ jobs:
         dnf repolist | grep -i epel || true
 
     - name: Checkout repo (for scripts)
-      uses: actions/checkout@v6.0.2
+      uses: actions/checkout@v4
       with:
         submodules: 'recursive'
         fetch-depth: '0'
 
     - name: Restore build artifacts
-      uses: actions/download-artifact@v7
+      uses: actions/download-artifact@v4
       with:
         name: v2rayN-linux
         path: ${{ github.workspace }}/v2rayN/Release
@@ -192,7 +192,7 @@ jobs:
         ls -R "$GITHUB_WORKSPACE/dist/rpm" || true
 
     - name: Upload RPM artifacts
-      uses: actions/upload-artifact@v6.0.0
+      uses: actions/upload-artifact@v4
       with:
         name: v2rayN-rpm
         path: dist/rpm/**/*.rpm

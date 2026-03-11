@@ -9,7 +9,7 @@ namespace v2rayN.Desktop.Views;
 public partial class MainWindow : WindowBase<MainWindowViewModel>
 {
     private static Config _config;
-    private readonly WindowNotificationManager? _manager;
+    private WindowNotificationManager? _manager;
     private bool _blCloseByUser = false;
 
     public MainWindow()
@@ -17,7 +17,6 @@ public partial class MainWindow : WindowBase<MainWindowViewModel>
         InitializeComponent();
 
         _config = AppManager.Instance.Config;
-        _manager = new WindowNotificationManager(TopLevel.GetTopLevel(this)) { MaxItems = 3, Position = NotificationPosition.TopRight };
 
         KeyDown += MainWindow_KeyDown;
         menuClose.Click += MenuClose_Click;
@@ -274,6 +273,14 @@ public partial class MainWindow : WindowBase<MainWindowViewModel>
     protected override void OnLoaded(object? sender, RoutedEventArgs e)
     {
         base.OnLoaded(sender, e);
+        
+        // Initialize notification manager after the window is loaded
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel != null)
+        {
+            _manager = new WindowNotificationManager(topLevel) { MaxItems = 3, Position = NotificationPosition.TopRight };
+        }
+        
         if (_config.UiItem.AutoHideStartup)
         {
             ShowHideWindow(false);

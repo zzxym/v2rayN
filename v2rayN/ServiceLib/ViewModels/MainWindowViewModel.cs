@@ -66,6 +66,7 @@ public class MainWindowViewModel : MyReactiveObject
         await ConfigHandler.InitBuiltinDNS(_config);
         await ConfigHandler.InitBuiltinFullConfigTemplate(_config);
         await InitDefaultSubscription();
+        await InitDefaultRoutingRule();
         await ProfileExManager.Instance.Init();
         await CoreManager.Instance.Init(_config, UpdateHandler);
         TaskManager.Instance.RegUpdateTask(_config, UpdateTaskHandler);
@@ -188,6 +189,45 @@ public class MainWindowViewModel : MyReactiveObject
                 await ConfigHandler.SaveConfig(_config);
                 
                 Logging.SaveLog("已更新策略组: 负载均衡，并设置为活动");
+            }
+        }
+    }
+
+    private async Task InitDefaultRoutingRule()
+    {
+        // 检查是否已存在'回国代理'规则集
+        var routingItems = await AppManager.Instance.RoutingItems();
+        var existingRouting = routingItems.FirstOrDefault(r => r.Remarks == "回国代理");
+        
+        if (existingRouting == null)
+        {
+            // 创建新的规则集
+            var routingItem = new RoutingItem
+            {
+                Id = Utils.GetGuid(false),
+                Remarks = "回国代理",
+                Sort = 13,
+                Enabled = true,
+                RuleSet = "[{\"domain\":[\"geosite:cn\"],\"outboundTag\":\"Proxy\"},{\"ip\":[\"geoip:cn\"],\"outboundTag\":\"Proxy\"},{\"domain\":[\"geosite:geolocation-!cn\"],\"outboundTag\":\"Direct\"}]",
+                RuleNum = 3
+            };
+            
+            await SQLiteHelper.Instance.InsertAsync(routingItem);
+            Logging.SaveLog("已创建默认规则集: 回国代理");
+        }
+        else
+        {
+            // 如果已存在，确保设置正确
+            if (existingRouting.Sort != 13 ||
+                existingRouting.RuleSet != "[{\"domain\":[\"geosite:cn\"],\"outboundTag\":\"Proxy\"},{\"ip\":[\"geoip:cn\"],\"outboundTag\":\"Proxy\"},{\"domain\":[\"geosite:geolocation-!cn\"],\"outboundTag\":\"Direct\"}]")
+            {
+                existingRouting.Sort = 13;
+                existingRouting.Enabled = true;
+                existingRouting.RuleSet = "[{\"domain\":[\"geosite:cn\"],\"outboundTag\":\"Proxy\"},{\"ip\":[\"geoip:cn\"],\"outboundTag\":\"Proxy\"},{\"domain\":[\"geosite:geolocation-!cn\"],\"outboundTag\":\"Direct\"}]";
+                existingRouting.RuleNum = 3;
+                
+                await SQLiteHelper.Instance.UpdateAsync(existingRouting);
+                Logging.SaveLog("已更新规则集: 回国代理");
             }
         }
     }

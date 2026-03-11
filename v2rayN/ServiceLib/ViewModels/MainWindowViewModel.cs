@@ -56,6 +56,7 @@ public class MainWindowViewModel : MyReactiveObject
 
         await ConfigHandler.InitBuiltinDNS(_config);
         await ConfigHandler.InitBuiltinFullConfigTemplate(_config);
+        await InitDefaultSubscription();
         await ProfileExManager.Instance.Init();
         await CoreManager.Instance.Init(_config, UpdateHandler);
         TaskManager.Instance.RegUpdateTask(_config, UpdateTaskHandler);
@@ -67,6 +68,41 @@ public class MainWindowViewModel : MyReactiveObject
         await RefreshServers();
 
         await Reload();
+    }
+
+    private async Task InitDefaultSubscription()
+    {
+        // 检查是否已存在'用户体验'订阅分组
+        var subscriptions = await AppManager.Instance.SubItems();
+        var existingSub = subscriptions.FirstOrDefault(s => s.Remarks == "用户体验");
+        
+        if (existingSub == null)
+        {
+            // 创建新的订阅分组
+            var subItem = new SubItem
+            {
+                Id = Utils.GetGuid(false),
+                Remarks = "用户体验",
+                Url = "https://rss.xiaolin.cc/test",
+                Enabled = true,
+                AutoUpdateInterval = 1, // 1分钟自动更新
+                UpdateTime = 0
+            };
+            
+            await ConfigHandler.AddSubItem(_config, subItem);
+            Logging.SaveLog("已创建默认订阅分组: 用户体验");
+        }
+        else
+        {
+            // 如果已存在，确保自动更新设置正确
+            if (existingSub.AutoUpdateInterval != 1)
+            {
+                existingSub.AutoUpdateInterval = 1;
+                existingSub.Enabled = true;
+                await ConfigHandler.AddSubItem(_config, existingSub);
+                Logging.SaveLog("已更新订阅分组: 用户体验");
+            }
+        }
     }
 
     #endregion Init

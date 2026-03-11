@@ -1380,7 +1380,13 @@ public static class ConfigHandler
 
         if (lstAdd.Count > 0)
         {
+            // 确保所有服务器的 ProtocolExtra 都被正确序列化
+            foreach (var item in lstAdd)
+            {
+                item.SetProtocolExtra();
+            }
             await SQLiteHelper.Instance.InsertAllAsync(lstAdd);
+            Logging.SaveLog($"AddBatchServersCommon: 成功保存 {lstAdd.Count} 个服务器到数据库");
         }
 
         await SaveConfig(config);

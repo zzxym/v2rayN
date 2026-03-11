@@ -2087,70 +2087,82 @@ public static class ConfigHandler
             items = await AppManager.Instance.RoutingItems();
         }
 
-        // Check if any of the new rule set names exist
-        if (!blImportAdvancedRules && items.Any(u => 
-            u.Remarks == "默认代理(Whitelist)" || 
-            u.Remarks == "默认直连(Blacklist)" || 
-            u.Remarks == "全局代理(Global)" ||
-            u.Remarks == "回国代理(China)"))
-        {
-            //migrate
-            //TODO Temporary code to be removed later
-            if (config.RoutingBasicItem.RoutingIndexId.IsNotEmpty())
-            {
-                var item = items.FirstOrDefault(t => t.Id == config.RoutingBasicItem.RoutingIndexId);
-                if (item != null)
-                {
-                    await SetDefaultRouting(config, item);
-                }
-                config.RoutingBasicItem.RoutingIndexId = string.Empty;
-            }
-
-            return 0;
-        }
-
         var maxSort = items.Count;
-        //默认代理(Whitelist)
-        var item2 = new RoutingItem()
-        {
-            Remarks = "默认代理(Whitelist)",
-            Url = string.Empty,
-            Sort = maxSort + 1,
-        };
-        await AddBatchRoutingRules(item2, EmbedUtils.GetEmbedText(Global.CustomRoutingFileName + "white"));
+        var createdAny = false;
 
-        //默认直连(Blacklist)
-        var item3 = new RoutingItem()
+        //默认代理(Whitelist) - 单独检查
+        if (!items.Any(u => u.Remarks == "默认代理(Whitelist)"))
         {
-            Remarks = "默认直连(Blacklist)",
-            Url = string.Empty,
-            Sort = maxSort + 2,
-        };
-        await AddBatchRoutingRules(item3, EmbedUtils.GetEmbedText(Global.CustomRoutingFileName + "black"));
-
-        //全局代理(Global)
-        var item1 = new RoutingItem()
-        {
-            Remarks = "全局代理(Global)",
-            Url = string.Empty,
-            Sort = maxSort + 3,
-        };
-        await AddBatchRoutingRules(item1, EmbedUtils.GetEmbedText(Global.CustomRoutingFileName + "global"));
-
-        //回国代理(China)
-        var item4 = new RoutingItem()
-        {
-            Remarks = "回国代理(China)",
-            Url = string.Empty,
-            Sort = maxSort + 4,
-        };
-        await InitChinaRoutingRules(item4);
-
-        if (!blImportAdvancedRules)
-        {
-            await SetDefaultRouting(config, item2);
+            var item2 = new RoutingItem()
+            {
+                Remarks = "默认代理(Whitelist)",
+                Url = string.Empty,
+                Sort = maxSort + 1,
+            };
+            await AddBatchRoutingRules(item2, EmbedUtils.GetEmbedText(Global.CustomRoutingFileName + "white"));
+            maxSort++;
+            createdAny = true;
+            
+            if (!blImportAdvancedRules)
+            {
+                await SetDefaultRouting(config, item2);
+            }
         }
-        return 0;
+
+        //默认直连(Blacklist) - 单独检查
+        if (!items.Any(u => u.Remarks == "默认直连(Blacklist)"))
+        {
+            var item3 = new RoutingItem()
+            {
+                Remarks = "默认直连(Blacklist)",
+                Url = string.Empty,
+                Sort = maxSort + 1,
+            };
+            await AddBatchRoutingRules(item3, EmbedUtils.GetEmbedText(Global.CustomRoutingFileName + "black"));
+            maxSort++;
+            createdAny = true;
+        }
+
+        //全局代理(Global) - 单独检查
+        if (!items.Any(u => u.Remarks == "全局代理(Global)"))
+        {
+            var item1 = new RoutingItem()
+            {
+                Remarks = "全局代理(Global)",
+                Url = string.Empty,
+                Sort = maxSort + 1,
+            };
+            await AddBatchRoutingRules(item1, EmbedUtils.GetEmbedText(Global.CustomRoutingFileName + "global"));
+            maxSort++;
+            createdAny = true;
+        }
+
+        //回国代理(China) - 单独检查
+        if (!items.Any(u => u.Remarks == "回国代理(China)"))
+        {
+            var item4 = new RoutingItem()
+            {
+                Remarks = "回国代理(China)",
+                Url = string.Empty,
+                Sort = maxSort + 1,
+            };
+            await InitChinaRoutingRules(item4);
+            createdAny = true;
+        }
+
+        //migrate
+        //TODO Temporary code to be removed later
+        if (!blImportAdvancedRules && config.RoutingBasicItem.RoutingIndexId.IsNotEmpty())
+        {
+            var item = items.FirstOrDefault(t => t.Id == config.RoutingBasicItem.RoutingIndexId);
+            if (item != null)
+            {
+                await SetDefaultRouting(config, item);
+            }
+            config.RoutingBasicItem.RoutingIndexId = string.Empty;
+        }
+
+        return createdAny ? 1 : 0;
     }
 
     /// <summary>

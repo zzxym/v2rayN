@@ -2155,6 +2155,9 @@ public static class ConfigHandler
             createdAny = true;
         }
 
+        // 清理重复的路由项
+        await CleanupDuplicateRoutingItems();
+
         //migrate
         //TODO Temporary code to be removed later
         if (!blImportAdvancedRules && config.RoutingBasicItem.RoutingIndexId.IsNotEmpty())
@@ -2168,6 +2171,37 @@ public static class ConfigHandler
         }
 
         return createdAny ? 1 : 0;
+    }
+
+    /// <summary>
+    /// 清理重复的路由项
+    /// 按名称分组，每个组只保留一个路由项
+    /// </summary>
+    private static async Task CleanupDuplicateRoutingItems()
+    {
+        var items = await AppManager.Instance.RoutingItems();
+        if (items == null || items.Count <= 1)
+        {
+            return;
+        }
+
+        // 按名称分组，找出重复的路由项
+        var groupedItems = items.GroupBy(item => item.Remarks)
+            .Where(group => group.Count() > 1)
+            .ToList();
+
+        foreach (var group in groupedItems)
+        {
+            // 保留第一个路由项，删除其他重复项
+            var firstItem = group.First();
+            var itemsToDelete = group.Skip(1).ToList();
+
+            foreach (var itemToDelete in itemsToDelete)
+            {
+                // 直接删除路由项（规则存储在 RuleSet 中）
+                await RemoveRoutingItem(itemToDelete);
+            }
+        }
     }
 
     /// <summary>

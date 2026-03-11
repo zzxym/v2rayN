@@ -2091,7 +2091,8 @@ public static class ConfigHandler
         if (!blImportAdvancedRules && items.Any(u => 
             u.Remarks == "默认代理(Whitelist)" || 
             u.Remarks == "默认直连(Blacklist)" || 
-            u.Remarks == "全局代理(Global)"))
+            u.Remarks == "全局代理(Global)" ||
+            u.Remarks == "回国代理(China)"))
         {
             //migrate
             //TODO Temporary code to be removed later
@@ -2136,11 +2137,95 @@ public static class ConfigHandler
         };
         await AddBatchRoutingRules(item1, EmbedUtils.GetEmbedText(Global.CustomRoutingFileName + "global"));
 
+        //回国代理(China)
+        var item4 = new RoutingItem()
+        {
+            Remarks = "回国代理(China)",
+            Url = string.Empty,
+            Sort = maxSort + 4,
+        };
+        await InitChinaRoutingRules(item4);
+
         if (!blImportAdvancedRules)
         {
             await SetDefaultRouting(config, item2);
         }
         return 0;
+    }
+
+    /// <summary>
+    /// Initialize China routing rules (回国代理)
+    /// Creates predefined routing rules for China proxy
+    /// </summary>
+    /// <param name="routingItem">Routing item to initialize</param>
+    private static async Task InitChinaRoutingRules(RoutingItem routingItem)
+    {
+        // Create rules list
+        var rules = new List<RulesItem>
+        {
+            // 1. 阻断udp443
+            new RulesItem
+            {
+                Id = Utils.GetGuid(false),
+                Remarks = "阻断udp443",
+                OutboundTag = "block",
+                Network = "udp",
+                Port = "443",
+                Enabled = true
+            },
+            // 2. 绕过局域网IP
+            new RulesItem
+            {
+                Id = Utils.GetGuid(false),
+                Remarks = "绕过局域网IP",
+                OutboundTag = "direct",
+                Ip = new List<string> { "geoip:private" },
+                Enabled = true
+            },
+            // 3. 绕过局域网域名
+            new RulesItem
+            {
+                Id = Utils.GetGuid(false),
+                Remarks = "绕过局域网域名",
+                OutboundTag = "direct",
+                Domain = new List<string> { "geosite:private" },
+                Enabled = true
+            },
+            // 4. 中国大陆域名
+            new RulesItem
+            {
+                Id = Utils.GetGuid(false),
+                Remarks = "中国大陆域名",
+                OutboundTag = "proxy",
+                Domain = new List<string> { "geosite:cn" },
+                Enabled = true
+            },
+            // 5. 中国大陆IP
+            new RulesItem
+            {
+                Id = Utils.GetGuid(false),
+                Remarks = "中国大陆IP",
+                OutboundTag = "proxy",
+                Ip = new List<string> { "geoip:cn" },
+                Enabled = true
+            },
+            // 6. 最终直连
+            new RulesItem
+            {
+                Id = Utils.GetGuid(false),
+                Remarks = "最终直连",
+                OutboundTag = "direct",
+                Port = "0-65535",
+                Enabled = true
+            }
+        };
+
+        // Set rules and save
+        routingItem.RuleNum = rules.Count;
+        routingItem.RuleSet = JsonUtils.Serialize(rules, false);
+        routingItem.Enabled = true;
+
+        await SQLiteHelper.Instance.InsertAsync(routingItem);
     }
 
     /// <summary>

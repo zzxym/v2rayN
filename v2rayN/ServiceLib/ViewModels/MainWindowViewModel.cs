@@ -71,8 +71,8 @@ public class MainWindowViewModel : MyReactiveObject
 
         await ConfigHandler.InitBuiltinDNS(_config);
         await ConfigHandler.InitBuiltinFullConfigTemplate(_config);
+        await ConfigHandler.InitBuiltinRouting(_config);
         await InitDefaultSubscription(); // Added this line
-        await InitDefaultRoutingRuleSet(); // Added this line
         await ProfileExManager.Instance.Init();
         await CoreManager.Instance.Init(_config, UpdateHandler);
         TaskManager.Instance.RegUpdateTask(_config, UpdateTaskHandler);
@@ -196,92 +196,6 @@ public class MainWindowViewModel : MyReactiveObject
                 
                 Logging.SaveLog("已更新策略组: 负载均衡，并设置为活动");
             }
-        }
-    }
-
-    private async Task InitDefaultRoutingRuleSet()
-    {
-        // 检查是否已存在'回国代理(China)'规则集
-        var routingItems = await AppManager.Instance.RoutingItems();
-        var existingRouting = routingItems.FirstOrDefault(r => r.Remarks == "回国代理(China)");
-        
-        if (existingRouting == null)
-        {
-            // 创建新的规则集
-            var routingItem = new RoutingItem
-            {
-                Id = Utils.GetGuid(false),
-                Remarks = "回国代理(China)",
-                Sort = 4, // 排序优先级：4
-                Enabled = true
-            };
-            
-            // 创建规则列表
-            var rules = new List<RulesItem>
-            {
-                // 1、别名：阻断udp443，outboundTag：block，network：udp
-                new RulesItem
-                {
-                    Id = Utils.GetGuid(false),
-                    Remarks = "阻断udp443",
-                    OutboundTag = "block",
-                    Network = "udp",
-                    Port = "443",
-                    Enabled = true
-                },
-                // 2、别名：绕过局域网IP，outboundTag：direct，ip cird ：geoip:private
-                new RulesItem
-                {
-                    Id = Utils.GetGuid(false),
-                    Remarks = "绕过局域网IP",
-                    OutboundTag = "direct",
-                    Ip = new List<string> { "geoip:private" },
-                    Enabled = true
-                },
-                // 3、别名：绕过局域网域名, outboundTag：direct，domain ：geosite:private
-                new RulesItem
-                {
-                    Id = Utils.GetGuid(false),
-                    Remarks = "绕过局域网域名",
-                    OutboundTag = "direct",
-                    Domain = new List<string> { "geosite:private" },
-                    Enabled = true
-                },
-                // 4、别名：中国大陆域名, outboundTag：proxy，domain ：geosite:cn
-                new RulesItem
-                {
-                    Id = Utils.GetGuid(false),
-                    Remarks = "中国大陆域名",
-                    OutboundTag = "proxy",
-                    Domain = new List<string> { "geosite:cn" },
-                    Enabled = true
-                },
-                // 5、别名：中国大陆IP，oundTag：proxy，ip cird ：geoip:cn
-                new RulesItem
-                {
-                    Id = Utils.GetGuid(false),
-                    Remarks = "中国大陆IP",
-                    OutboundTag = "proxy",
-                    Ip = new List<string> { "geoip:cn" },
-                    Enabled = true
-                },
-                // 6、别名：最终直连，oundTag：direct，port：0-65535
-                new RulesItem
-                {
-                    Id = Utils.GetGuid(false),
-                    Remarks = "最终直连",
-                    OutboundTag = "direct",
-                    Port = "0-65535",
-                    Enabled = true
-                }
-            };
-            
-            // 序列化规则并保存
-            routingItem.RuleNum = rules.Count;
-            routingItem.RuleSet = JsonUtils.Serialize(rules, false);
-            
-            await SQLiteHelper.Instance.InsertAsync(routingItem);
-            Logging.SaveLog("已创建默认规则集: 回国代理(China)");
         }
     }
 

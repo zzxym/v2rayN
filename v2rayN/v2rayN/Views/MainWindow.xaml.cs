@@ -55,6 +55,7 @@ public partial class MainWindow
         this.WhenActivated(disposables =>
         {
             this.BindCommand(ViewModel, vm => vm.ReloadCmd, v => v.menuReload).DisposeWith(disposables);
+            this.BindCommand(ViewModel, vm => vm.ManualUpdateSubCmd, v => v.menuUpdateSub).DisposeWith(disposables);
             this.OneWayBind(ViewModel, vm => vm.BlReloadEnabled, v => v.menuReload.IsEnabled).DisposeWith(disposables);
 
             switch (_config.UiItem.MainGirdOrientation)

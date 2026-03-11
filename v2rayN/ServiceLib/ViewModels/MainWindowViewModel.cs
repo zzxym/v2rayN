@@ -67,66 +67,124 @@ public class MainWindowViewModel : MyReactiveObject
 
     private async Task Init()
     {
-        AppManager.Instance.ShowInTaskbar = true;
-
-        await ConfigHandler.InitBuiltinDNS(_config);
-        await ConfigHandler.InitBuiltinFullConfigTemplate(_config);
-        await ConfigHandler.InitBuiltinRouting(_config);
-        await InitDefaultSubscription(); // Added this line
-        await ProfileExManager.Instance.Init();
-        await CoreManager.Instance.Init(_config, UpdateHandler);
-        TaskManager.Instance.RegUpdateTask(_config, UpdateTaskHandler);
-
-        if (_config.GuiItem.EnableStatistics || _config.GuiItem.DisplayRealTimeSpeed)
+        try
         {
-            await StatisticsManager.Instance.Init(_config, UpdateStatisticsHandler);
+            Logging.SaveLog("MainWindowViewModel.Init() 开始执行...");
+            
+            AppManager.Instance.ShowInTaskbar = true;
+
+            Logging.SaveLog("初始化 DNS...");
+            await ConfigHandler.InitBuiltinDNS(_config);
+            
+            Logging.SaveLog("初始化 FullConfigTemplate...");
+            await ConfigHandler.InitBuiltinFullConfigTemplate(_config);
+            
+            Logging.SaveLog("初始化 Routing...");
+            await ConfigHandler.InitBuiltinRouting(_config);
+            
+            Logging.SaveLog("初始化默认订阅...");
+            await InitDefaultSubscription();
+            
+            Logging.SaveLog("初始化 ProfileExManager...");
+            await ProfileExManager.Instance.Init();
+            
+            Logging.SaveLog("初始化 CoreManager...");
+            await CoreManager.Instance.Init(_config, UpdateHandler);
+            
+            TaskManager.Instance.RegUpdateTask(_config, UpdateTaskHandler);
+
+            if (_config.GuiItem.EnableStatistics || _config.GuiItem.DisplayRealTimeSpeed)
+            {
+                Logging.SaveLog("初始化 StatisticsManager...");
+                await StatisticsManager.Instance.Init(_config, UpdateStatisticsHandler);
+            }
+            
+            Logging.SaveLog("刷新服务器列表...");
+            await RefreshServers();
+
+            // 触发订阅和路由菜单刷新
+            Logging.SaveLog("触发订阅和路由菜单刷新...");
+            AppEvents.SubscriptionsRefreshRequested.Publish();
+            AppEvents.RoutingsMenuRefreshRequested.Publish();
+
+            Logging.SaveLog("执行 Reload...");
+            await Reload();
+            
+            Logging.SaveLog("MainWindowViewModel.Init() 执行完成");
         }
-        await RefreshServers();
-
-        // 触发订阅和路由菜单刷新
-        AppEvents.SubscriptionsRefreshRequested.Publish();
-        AppEvents.RoutingsMenuRefreshRequested.Publish();
-
-        await Reload();
+        catch (Exception ex)
+        {
+            Logging.SaveLog("MainWindowViewModel.Init() 异常: " + ex.Message);
+            Logging.SaveLog(ex.StackTrace);
+        }
     }
 
     private async Task InitDefaultSubscription()
     {
-        // 检查是否已存在'用户体验'订阅分组
-        var subscriptions = await AppManager.Instance.SubItems();
-        var existingSub = subscriptions.FirstOrDefault(s => s.Remarks == "用户体验");
-        
-        if (existingSub == null)
+        try
         {
-            // 创建新的订阅分组
-            var subItem = new SubItem
-            {
-                Id = Utils.GetGuid(false),
-                Remarks = "用户体验",
-                Url = "https://rss.xiaolin.cc/test",
-                Enabled = true,
-                AutoUpdateInterval = 1, // 1分钟自动更新
-                UpdateTime = 0
-            };
+            Logging.SaveLog("开始初始化默认订阅...");
             
-            await ConfigHandler.AddSubItem(_config, subItem);
-            Logging.SaveLog("已创建默认订阅分组: 用户体验");
-            existingSub = subItem;
-        }
-        else
-        {
-            // 如果已存在，确保自动更新设置正确
-            if (existingSub.AutoUpdateInterval != 1)
+            // 检查是否已存在'用户体验'订阅分组
+            var subscriptions = await AppManager.Instance.SubItems();
+            Logging.SaveLog($"当前订阅数量: {subscriptions?.Count ?? 0}");
+            
+            var existingSub = subscriptions?.FirstOrDefault(s => s.Remarks == "用户体验");
+            
+            if (existingSub == null)
             {
-                existingSub.AutoUpdateInterval = 1;
-                existingSub.Enabled = true;
-                await ConfigHandler.AddSubItem(_config, existingSub);
-                Logging.SaveLog("已更新订阅分组: 用户体验");
+                Logging.SaveLog("未找到'用户体验'订阅分组，准备创建...");
+                
+                // 创建新的订阅分组
+                var subItem = new SubItem
+                {
+                    Id = Utils.GetGuid(false),
+                    Remarks = "用户体验",
+                    Url = "https://rss.xiaolin.cc/test",
+                    Enabled = true,
+                    AutoUpdateInterval = 1, // 1分钟自动更新
+                    UpdateTime = 0
+                };
+                
+                var result = await ConfigHandler.AddSubItem(_config, subItem);
+                Logging.SaveLog($"创建订阅分组结果: {result}, ID: {subItem.Id}");
+                
+                if (result == 0)
+                {
+                    Logging.SaveLog("已创建默认订阅分组: 用户体验");
+                    existingSub = subItem;
+                }
+                else
+                {
+                    Logging.SaveLog("创建订阅分组失败");
+                    return;
+                }
+            }
+            else
+            {
+                Logging.SaveLog($"找到已存在的订阅分组: {existingSub.Id}");
+                
+                // 如果已存在，确保自动更新设置正确
+                if (existingSub.AutoUpdateInterval != 1)
+                {
+                    existingSub.AutoUpdateInterval = 1;
+                    existingSub.Enabled = true;
+                    await ConfigHandler.AddSubItem(_config, existingSub);
+                    Logging.SaveLog("已更新订阅分组: 用户体验");
+                }
+            }
+            
+            // 创建默认的负载均衡策略组
+            if (existingSub != null)
+            {
+                await InitDefaultPolicyGroup(existingSub);
             }
         }
-        
-        // 创建默认的负载均衡策略组
-        await InitDefaultPolicyGroup(existingSub);
+        catch (Exception ex)
+        {
+            Logging.SaveLog("InitDefaultSubscription异常: " + ex.Message);
+            Logging.SaveLog(ex.StackTrace);
+        }
     }
 
     private async Task InitDefaultPolicyGroup(SubItem subItem)

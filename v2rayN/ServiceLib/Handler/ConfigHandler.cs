@@ -1309,8 +1309,11 @@ public static class ConfigHandler
     /// <returns>Number of successfully imported servers or -1 if failed</returns>
     private static async Task<int> AddBatchServersCommon(Config config, string strData, string subid, bool isSub)
     {
+        Logging.SaveLog($"AddBatchServersCommon: 开始处理, subid={subid}, isSub={isSub}, 数据长度={strData?.Length ?? 0}");
+        
         if (strData.IsNullOrEmpty())
         {
+            Logging.SaveLog("AddBatchServersCommon: 数据为空，返回-1");
             return -1;
         }
 
@@ -1318,12 +1321,14 @@ public static class ConfigHandler
         //remove sub items
         if (isSub && subid.IsNotEmpty())
         {
+            Logging.SaveLog($"AddBatchServersCommon: 删除旧服务器 subid={subid}");
             await RemoveServersViaSubid(config, subid, isSub);
             subFilter = (await AppManager.Instance.GetSubItem(subid))?.Filter ?? "";
         }
 
         var countServers = 0;
         List<ProfileItem> lstAdd = new();
+        Logging.SaveLog("AddBatchServersCommon: 开始解析服务器数据...");
         var arrData = strData.Split(Environment.NewLine.ToCharArray()).Where(t => !t.IsNullOrEmpty());
         if (isSub)
         {
@@ -1378,18 +1383,35 @@ public static class ConfigHandler
             }
         }
 
+        Logging.SaveLog($"AddBatchServersCommon: 解析完成，共 {lstAdd.Count} 个服务器待保存");
+        
         if (lstAdd.Count > 0)
         {
             // 确保所有服务器的 ProtocolExtra 都被正确序列化
             foreach (var item in lstAdd)
             {
                 item.SetProtocolExtra();
+                Logging.SaveLog($"AddBatchServersCommon: 准备保存服务器 - IndexId={item.IndexId}, Remarks={item.Remarks}, Subid={item.Subid}, IsSub={item.IsSub}");
             }
-            await SQLiteHelper.Instance.InsertAllAsync(lstAdd);
-            Logging.SaveLog($"AddBatchServersCommon: 成功保存 {lstAdd.Count} 个服务器到数据库");
+            
+            try
+            {
+                var result = await SQLiteHelper.Instance.InsertAllAsync(lstAdd);
+                Logging.SaveLog($"AddBatchServersCommon: InsertAllAsync 返回结果: {result}");
+                
+                // 验证保存是否成功
+                var savedServers = await AppManager.Instance.ProfileItems(subid);
+                Logging.SaveLog($"AddBatchServersCommon: 验证保存结果 - 数据库中 subid={subid} 的服务器数量: {savedServers?.Count ?? 0}");
+            }
+            catch (Exception ex)
+            {
+                Logging.SaveLog($"AddBatchServersCommon: 保存服务器到数据库时发生异常: {ex.Message}");
+                Logging.SaveLog(ex.StackTrace);
+            }
         }
 
         await SaveConfig(config);
+        Logging.SaveLog($"AddBatchServersCommon: 处理完成，返回 {countServers}");
         return countServers;
     }
 

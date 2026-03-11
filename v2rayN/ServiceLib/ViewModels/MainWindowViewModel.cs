@@ -48,8 +48,7 @@ public class MainWindowViewModel : MyReactiveObject
 
         ManualUpdateSubCmd = ReactiveCommand.CreateFromTask(async () =>
         {
-            AppEvents.SubscriptionsUpdateRequested.Publish(false);
-            await Task.Delay(1000);
+            await UpdateSubscriptionProcess("", false);
         });
 
         #endregion WhenAnyValue && ReactiveCommand
@@ -420,4 +419,13 @@ public class MainWindowViewModel : MyReactiveObject
     }
 
     #endregion core job
+
+    #region Subscription
+
+    public async Task UpdateSubscriptionProcess(string subId, bool blProxy)
+    {
+        await Task.Run(async () => await SubscriptionHandler.UpdateProcess(_config, subId, blProxy, UpdateTaskHandler));
+    }
+
+    #endregion Subscription
 }

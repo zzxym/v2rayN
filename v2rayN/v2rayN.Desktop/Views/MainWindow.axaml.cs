@@ -107,14 +107,14 @@ public partial class MainWindow : WindowBase<MainWindowViewModel>
 
         if (Utils.IsWindows())
         {
-            Title = $"v2rayN二开维护版 - {(Utils.IsAdministrator() ? ResUI.RunAsAdmin : ResUI.NotRunAsAdmin)}";
+            Title = $"国际VPN客户端体验版 - {(Utils.IsAdministrator() ? ResUI.RunAsAdmin : ResUI.NotRunAsAdmin)}";
 
             ThreadPool.RegisterWaitForSingleObject(Program.ProgramStarted, OnProgramStarted, null, -1, false);
             HotkeyManager.Instance.Init(_config, OnHotkeyHandler);
         }
         else
         {
-            Title = "v2rayN二开维护版";
+            Title = "国际VPN客户端体验版";
         }
 
         if (_config.UiItem.AutoHideStartup && Utils.IsWindows())

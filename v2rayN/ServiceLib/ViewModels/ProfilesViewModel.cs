@@ -224,7 +224,10 @@ public class ProfilesViewModel : MyReactiveObject
 
         await RefreshServers();
 
-        await _updateView?.Invoke(EViewAction.ProfilesFocus, null);
+        if (_updateView != null)
+        {
+            await _updateView.Invoke(EViewAction.ProfilesFocus, null);
+        }
     }
 
     private async Task ServerFilterChanged(bool c)
@@ -267,7 +270,10 @@ public class ProfilesViewModel : MyReactiveObject
             }
         }
 
-        await _updateView?.Invoke(EViewAction.DispatcherRefreshServersBiz, null);
+        if (_updateView != null)
+        {
+            await _updateView.Invoke(EViewAction.DispatcherRefreshServersBiz, null);
+        }
     }
 
     private async Task RefreshSubscriptions()

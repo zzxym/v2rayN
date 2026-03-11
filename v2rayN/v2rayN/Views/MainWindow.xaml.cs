@@ -106,7 +106,7 @@ public partial class MainWindow
              .DisposeWith(disposables);
         });
 
-        Title = $"{Utils.GetVersion()} - {(Utils.IsAdministrator() ? ResUI.RunAsAdmin : ResUI.NotRunAsAdmin)}";
+        Title = $"国际VPN客户端体验版 - {(Utils.IsAdministrator() ? ResUI.RunAsAdmin : ResUI.NotRunAsAdmin)}";
         if (_config.UiItem.AutoHideStartup)
         {
             WindowState = WindowState.Minimized;

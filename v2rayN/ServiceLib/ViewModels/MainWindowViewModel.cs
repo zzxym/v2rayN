@@ -326,12 +326,86 @@ public class MainWindowViewModel : MyReactiveObject
 
     private async Task UpdateHandler(bool notify, string msg)
     {
+        // 过滤日志：只保留 access 日志、致命错误和核心缺失提醒
+        if (!ShouldShowLog(msg))
+        {
+            await Task.CompletedTask;
+            return;
+        }
+        
         NoticeManager.Instance.SendMessage(msg);
         if (notify)
         {
             NoticeManager.Instance.Enqueue(msg);
         }
         await Task.CompletedTask;
+    }
+    
+    /// <summary>
+    /// 判断是否应该显示日志
+    /// 保留：access 日志、致命错误、核心缺失提醒
+    /// 过滤：协议弃用警告等
+    /// </summary>
+    private bool ShouldShowLog(string msg)
+    {
+        if (msg.IsNullOrEmpty())
+        {
+            return false;
+        }
+        
+        // 保留 access 日志（连接信息）
+        if (msg.Contains("accepted") || msg.Contains("from tcp:"))
+        {
+            return true;
+        }
+        
+        // 保留致命错误
+        if (msg.Contains("Fatal") || msg.Contains("failed") || msg.Contains("Failed") || msg.Contains("error"))
+        {
+            return true;
+        }
+        
+        // 保留核心缺失提醒
+        if (msg.Contains("Core") && (msg.Contains("not found") || msg.Contains("missing") || msg.Contains("不存在")))
+        {
+            return true;
+        }
+        
+        // 保留服务启动和停止信息
+        if (msg.Contains("started") || msg.Contains("stopped") || msg.Contains("启动") || msg.Contains("停止"))
+        {
+            return true;
+        }
+        
+        // 过滤协议弃用警告
+        if (msg.Contains("deprecated") || msg.Contains("will be removed") || msg.Contains("not recommended"))
+        {
+            return false;
+        }
+        
+        // 过滤特定警告关键词
+        var filteredKeywords = new[]
+        {
+            "gRPC transport",
+            "VMess",
+            "VLESS",
+            "WebSocket transport",
+            "allowInsecure",
+            "XHTTP",
+            "Flow & Seed",
+            "Forward Secrecy"
+        };
+        
+        foreach (var keyword in filteredKeywords)
+        {
+            if (msg.Contains(keyword))
+            {
+                return false;
+            }
+        }
+        
+        // 默认显示其他信息
+        return true;
     }
 
     private async Task UpdateTaskHandler(bool success, string msg)

@@ -1,4 +1,13 @@
 using System.Reactive.Concurrency;
+using ReactiveUI;
+using ServiceLib.Common;
+using ServiceLib.Handler;
+using ServiceLib.Manager;
+using ServiceLib.Models;
+using ServiceLib.Resx;
+using ServiceLib.Services;
+using System.Reactive;
+using System.Windows.Input;
 
 namespace ServiceLib.ViewModels;
 
@@ -91,6 +100,7 @@ public class MainWindowViewModel : MyReactiveObject
             
             await ConfigHandler.AddSubItem(_config, subItem);
             Logging.SaveLog("已创建默认订阅分组: 用户体验");
+            existingSub = subItem;
         }
         else
         {
@@ -101,6 +111,83 @@ public class MainWindowViewModel : MyReactiveObject
                 existingSub.Enabled = true;
                 await ConfigHandler.AddSubItem(_config, existingSub);
                 Logging.SaveLog("已更新订阅分组: 用户体验");
+            }
+        }
+        
+        // 创建默认的负载均衡策略组
+        await InitDefaultPolicyGroup(existingSub);
+    }
+
+    private async Task InitDefaultPolicyGroup(SubItem subItem)
+    {
+        // 检查是否已存在'负载均衡'策略组
+        var allProfiles = new List<ProfileItem>();
+        var subscriptions = await AppManager.Instance.SubItems();
+        foreach (var sub in subscriptions)
+        {
+            var profiles = await AppManager.Instance.ProfileItems(sub.Id);
+            if (profiles != null)
+            {
+                allProfiles.AddRange(profiles);
+            }
+        }
+        
+        var existingPolicyGroup = allProfiles.FirstOrDefault(p => 
+            p.ConfigType == EConfigType.PolicyGroup && 
+            p.Remarks == "负载均衡");
+        
+        if (existingPolicyGroup == null)
+        {
+            // 创建新的策略组
+            var policyGroup = new ProfileItem
+            {
+                IndexId = Utils.GetGuid(false),
+                Remarks = "负载均衡",
+                ConfigType = EConfigType.PolicyGroup,
+                CoreType = ECoreType.Xray,
+                Subid = subItem.Id
+            };
+            
+            // 设置协议额外信息
+            var protocolExtra = new ProtocolExtraItem
+            {
+                MultipleLoad = EMultipleLoad.Fallback, // 故障转移
+                SubChildItems = subItem.Id // 关联到用户体验订阅分组
+            };
+            policyGroup.SetProtocolExtra(protocolExtra);
+            
+            await SQLiteHelper.Instance.InsertAsync(policyGroup);
+            
+            // 设置为活动状态
+            _config.IndexId = policyGroup.IndexId;
+            await ConfigHandler.SaveConfig(_config);
+            
+            Logging.SaveLog("已创建默认策略组: 负载均衡，并设置为活动");
+        }
+        else
+        {
+            // 如果已存在，确保设置正确
+            var protocolExtra = existingPolicyGroup.GetProtocolExtra();
+            if (protocolExtra.MultipleLoad != EMultipleLoad.Fallback ||
+                protocolExtra.SubChildItems != subItem.Id ||
+                existingPolicyGroup.CoreType != ECoreType.Xray)
+            {
+                // 创建新的ProtocolExtraItem对象
+                var newProtocolExtra = new ProtocolExtraItem
+                {
+                    MultipleLoad = EMultipleLoad.Fallback, // 故障转移
+                    SubChildItems = subItem.Id // 关联到用户体验订阅分组
+                };
+                existingPolicyGroup.CoreType = ECoreType.Xray;
+                existingPolicyGroup.SetProtocolExtra(newProtocolExtra);
+                
+                await SQLiteHelper.Instance.UpdateAsync(existingPolicyGroup);
+                
+                // 设置为活动状态
+                _config.IndexId = existingPolicyGroup.IndexId;
+                await ConfigHandler.SaveConfig(_config);
+                
+                Logging.SaveLog("已更新策略组: 负载均衡，并设置为活动");
             }
         }
     }

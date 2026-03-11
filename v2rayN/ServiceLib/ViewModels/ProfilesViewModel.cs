@@ -145,6 +145,9 @@ public class ProfilesViewModel : MyReactiveObject
         SelectedProfile = new();
         SelectedSub = new();
 
+        // 等待一段时间，让MainWindowViewModel.Init()先完成订阅创建
+        await Task.Delay(500);
+        
         await RefreshSubscriptions();
         //await RefreshServers();
     }

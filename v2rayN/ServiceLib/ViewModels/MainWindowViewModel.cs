@@ -201,6 +201,29 @@ public class MainWindowViewModel : MyReactiveObject
         
         if (existingRouting == null)
         {
+            // 创建规则列表
+            var rules = new List<RulesItem>
+            {
+                new RulesItem
+                {
+                    Domain = new List<string> { "geosite:cn" },
+                    OutboundTag = "Proxy",
+                    Enabled = true
+                },
+                new RulesItem
+                {
+                    Ip = new List<string> { "geoip:cn" },
+                    OutboundTag = "Proxy",
+                    Enabled = true
+                },
+                new RulesItem
+                {
+                    Domain = new List<string> { "geosite:geolocation-!cn" },
+                    OutboundTag = "Direct",
+                    Enabled = true
+                }
+            };
+            
             // 创建新的规则集
             var routingItem = new RoutingItem
             {
@@ -208,7 +231,7 @@ public class MainWindowViewModel : MyReactiveObject
                 Remarks = "回国代理",
                 Sort = 13,
                 Enabled = true,
-                RuleSet = "[{\"domain\":[\"geosite:cn\"],\"outboundTag\":\"Proxy\"},{\"ip\":[\"geoip:cn\"],\"outboundTag\":\"Proxy\"},{\"domain\":[\"geosite:geolocation-!cn\"],\"outboundTag\":\"Direct\"}]",
+                RuleSet = JsonUtils.Serialize(rules, false),
                 RuleNum = 3
             };
             
@@ -218,12 +241,35 @@ public class MainWindowViewModel : MyReactiveObject
         else
         {
             // 如果已存在，确保设置正确
+            var currentRules = JsonUtils.Deserialize<List<RulesItem>>(existingRouting.RuleSet);
+            var expectedRules = new List<RulesItem>
+            {
+                new RulesItem
+                {
+                    Domain = new List<string> { "geosite:cn" },
+                    OutboundTag = "Proxy",
+                    Enabled = true
+                },
+                new RulesItem
+                {
+                    Ip = new List<string> { "geoip:cn" },
+                    OutboundTag = "Proxy",
+                    Enabled = true
+                },
+                new RulesItem
+                {
+                    Domain = new List<string> { "geosite:geolocation-!cn" },
+                    OutboundTag = "Direct",
+                    Enabled = true
+                }
+            };
+            
             if (existingRouting.Sort != 13 ||
-                existingRouting.RuleSet != "[{\"domain\":[\"geosite:cn\"],\"outboundTag\":\"Proxy\"},{\"ip\":[\"geoip:cn\"],\"outboundTag\":\"Proxy\"},{\"domain\":[\"geosite:geolocation-!cn\"],\"outboundTag\":\"Direct\"}]")
+                currentRules?.Count != 3)
             {
                 existingRouting.Sort = 13;
                 existingRouting.Enabled = true;
-                existingRouting.RuleSet = "[{\"domain\":[\"geosite:cn\"],\"outboundTag\":\"Proxy\"},{\"ip\":[\"geoip:cn\"],\"outboundTag\":\"Proxy\"},{\"domain\":[\"geosite:geolocation-!cn\"],\"outboundTag\":\"Direct\"}]";
+                existingRouting.RuleSet = JsonUtils.Serialize(expectedRules, false);
                 existingRouting.RuleNum = 3;
                 
                 await SQLiteHelper.Instance.UpdateAsync(existingRouting);

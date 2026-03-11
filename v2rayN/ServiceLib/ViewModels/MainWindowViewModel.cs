@@ -272,7 +272,8 @@ public class MainWindowViewModel : MyReactiveObject
                 Remarks = "负载均衡",
                 ConfigType = EConfigType.PolicyGroup,
                 CoreType = ECoreType.Xray,
-                Subid = subItem.Id
+                Subid = subItem.Id,
+                IsSub = false // 策略组不是订阅服务器
             };
             
             // 设置协议额外信息
